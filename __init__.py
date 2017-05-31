@@ -16,18 +16,16 @@
 # along with Mycroft Core.  If not, see <http://www.gnu.org/licenses/>.
 
 
+
 import datetime
 from os.path import dirname
-
 import tzlocal
 from adapt.intent import IntentBuilder
 from astral import Astral
 from pytz import timezone
-
 from mycroft.skills.core import MycroftSkill
 
 __author__ = 'ryanleesipes', 'jdorleans'
-
 
 # TODO - Localization
 class TimeSkill(MycroftSkill):
@@ -43,9 +41,18 @@ class TimeSkill(MycroftSkill):
             self.format = "%I:%M, %p"
 
     def initialize(self):
-        intent = IntentBuilder("TimeIntent").require("QueryKeyword") \
+        self.__build_speak_intent()
+        self.__build_display_intent()
+        
+    def __build_speak_intent(self):
+        intent = IntentBuilder("SpeakIntent").require("QueryKeyword") \
             .require("TimeKeyword").optionally("Location").build()
-        self.register_intent(intent, self.handle_intent)
+        self.register_intent(intent, self.handle_speak_intent)
+
+    def __build_display_intent(self):
+        intent = IntentBuilder("DisplayIntent")\
+            .require("TimeKeyword").require("DisplayKeyword").optionally("Location").build()
+        self.register_intent(intent, self.handle_display_intent)
 
     def get_timezone(self, locale):
         try:
@@ -58,14 +65,13 @@ class TimeSkill(MycroftSkill):
             except:
                 return None
 
-    def handle_intent(self, message):
+    def handle_speak_intent(self, message):
         location = message.data.get("Location")  # optional parameter
         nowUTC = datetime.datetime.now(timezone('UTC'))
-
         tz = self.get_timezone(self.location_timezone)
+
         if location:
             tz = self.get_timezone(location)
-
         if not tz:
             self.speak_dialog("time.tz.not.found", {"location": location})
             return
@@ -74,9 +80,23 @@ class TimeSkill(MycroftSkill):
         time = nowUTC.astimezone(tz).strftime(self.format)
         self.speak_dialog("time.current", {"time": time})
 
+    def handle_display_intent(self, message):
+        location = message.data.get("Location")  # optional parameter
+        nowUTC = datetime.datetime.now(timezone('UTC'))
+        tz = self.get_timezone(self.location_timezone)
+
+        if location:
+            tz = self.get_timezone(location)
+        if not tz:
+            self.speak_dialog("time.tz.not.found", {"location": location})
+            return
+            
+        # Convert UTC to appropriate timezone and format
+        time = nowUTC.astimezone(tz).strftime(self.format)
+        self.enclosure.mouth_text(time) 
+        
     def stop(self):
         pass
-
 
 def create_skill():
     return TimeSkill()
