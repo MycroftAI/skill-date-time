@@ -16,16 +16,20 @@
 # along with Mycroft Core.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 import datetime
-from os.path import dirname
+from os.path import abspath
 import tzlocal
 from adapt.intent import IntentBuilder
 from astral import Astral
 from pytz import timezone
 from mycroft.skills.core import MycroftSkill
+from mycroft.util.log import getLogger
+import time
 
 __author__ = 'ryanleesipes', 'jdorleans'
+
+LOGGER = getLogger(__name__)
+
 
 # TODO - Localization
 class TimeSkill(MycroftSkill):
@@ -43,15 +47,15 @@ class TimeSkill(MycroftSkill):
     def initialize(self):
         self.__build_speak_intent()
         self.__build_display_intent()
-        
+
     def __build_speak_intent(self):
         intent = IntentBuilder("SpeakIntent").require("QueryKeyword") \
             .require("TimeKeyword").optionally("Location").build()
         self.register_intent(intent, self.handle_speak_intent)
 
     def __build_display_intent(self):
-        intent = IntentBuilder("DisplayIntent")\
-            .require("TimeKeyword").require("DisplayKeyword").optionally("Location").build()
+        intent = IntentBuilder("DisplayIntent").require("DisplayKeyword") \
+            .require("TimeKeyword").optionally("Location").build()
         self.register_intent(intent, self.handle_display_intent)
 
     def get_timezone(self, locale):
@@ -65,6 +69,41 @@ class TimeSkill(MycroftSkill):
             except:
                 return None
 
+    def display(self, current_time):
+        # Map time to display code for Mark1 faceplate
+        code_dict = {
+            ':': 'BIEB',
+            '0': 'DIODCCOD',
+            '1': 'DIECODAC',
+            '2': 'DIKDKCOC',
+            '3': 'DIKCKCOD',
+            '4': 'DIOAIAOD',
+            '5': 'DIOCKCKD',
+            '6': 'DIODKCKD',
+            '7': 'DICACAOD',
+            '8': 'DIODKCOD',
+            '9': 'DIOAKAOD',
+        }
+
+        value_list = [val for val in current_time]
+        code_list = []
+
+        for val in value_list:
+            code_list.append(code_dict[val])
+
+        # clear screen
+        self.enclosure.reset()
+
+        # x is used to offset the images
+        xoffset = 7
+        for code in code_list:
+            self.enclosure.mouth_display(code, x=xoffset, y=1,
+                                         refresh=False, clearTime=10)
+            if code == 'BIEB':
+                xoffset += 2
+            else:
+                xoffset += 4
+
     def handle_speak_intent(self, message):
         location = message.data.get("Location")  # optional parameter
         nowUTC = datetime.datetime.now(timezone('UTC'))
@@ -77,8 +116,14 @@ class TimeSkill(MycroftSkill):
             return
 
         # Convert UTC to appropriate timezone and format
-        time = nowUTC.astimezone(tz).strftime(self.format)
-        self.speak_dialog("time.current", {"time": time})
+        current_time = nowUTC.astimezone(tz).strftime(self.format)
+        self.display(current_time)
+        self.enclosure.deactivate_mouth_events()
+        self.speak_dialog("time.current", {"time": current_time})
+
+        time.sleep(3)
+        self.enclosure.activate_mouth_events()
+        self.enclosure.reset()
 
     def handle_display_intent(self, message):
         location = message.data.get("Location")  # optional parameter
@@ -90,13 +135,14 @@ class TimeSkill(MycroftSkill):
         if not tz:
             self.speak_dialog("time.tz.not.found", {"location": location})
             return
-            
+
         # Convert UTC to appropriate timezone and format
-        time = nowUTC.astimezone(tz).strftime(self.format)
-        self.enclosure.mouth_text(time) 
-        
+        current_time = nowUTC.astimezone(tz).strftime(self.format)
+        self.display(current_time)
+
     def stop(self):
         pass
+
 
 def create_skill():
     return TimeSkill()
