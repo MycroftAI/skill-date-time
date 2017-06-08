@@ -88,7 +88,7 @@ class TimeSkill(MycroftSkill):
         value_list = [val for val in current_time]
         code_list = []
 
-        for val in value_list:
+        for val in value_list[:5]:
             code_list.append(code_dict[val])
 
         # clear screen
@@ -98,7 +98,7 @@ class TimeSkill(MycroftSkill):
         xoffset = 7
         for code in code_list:
             self.enclosure.mouth_display(code, x=xoffset, y=1,
-                                         refresh=False, clearTime=10)
+                                         refresh=False)
             if code == 'BIEB':
                 xoffset += 2
             else:
@@ -121,7 +121,7 @@ class TimeSkill(MycroftSkill):
         self.enclosure.deactivate_mouth_events()
         self.speak_dialog("time.current", {"time": current_time})
 
-        time.sleep(3)
+        time.sleep(4)
         self.enclosure.activate_mouth_events()
         self.enclosure.reset()
 
