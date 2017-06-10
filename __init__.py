@@ -52,6 +52,9 @@ class TimeSkill(MycroftSkill):
         intent = IntentBuilder("SpeakIntent").require("QueryKeyword") \
             .require("TimeKeyword").optionally("Location").build()
         self.register_intent(intent, self.handle_speak_intent)
+        date_intent = IntentBuilder("DateIntent").require("QueryKeyword") \
+            .require("DateKeyword").optionally("Location").build()
+        self.register_intent(date_intent, self.handle_date_intent)
 
     def __build_display_intent(self):
         intent = IntentBuilder("DisplayIntent").require("DisplayKeyword") \
@@ -97,8 +100,7 @@ class TimeSkill(MycroftSkill):
         # x is used to offset the images
         xoffset = 7
         for code in code_list:
-            self.enclosure.mouth_display(code, x=xoffset, y=1,
-                                         refresh=False)
+            #self.enclosure.mouth_display(code, x=xoffset, y=1,refresh=False)
             if code == 'BIEB':
                 xoffset += 2
             else:
@@ -124,7 +126,11 @@ class TimeSkill(MycroftSkill):
         time.sleep(4)
         self.enclosure.activate_mouth_events()
         self.enclosure.reset()
-
+    def handle_date_intent(self, message):
+        location = message.data.get("Location")  # optional parameter
+        nowUTC = datetime.datetime.now(timezone('UTC'))
+        date = nowUTC.date().strftime("%Y.%m.%d")
+        self.speak_dialog("time.current", {"time": date})
     def handle_display_intent(self, message):
         location = message.data.get("Location")  # optional parameter
         nowUTC = datetime.datetime.now(timezone('UTC'))
