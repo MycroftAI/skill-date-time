@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Mycroft Core.  If not, see <http://www.gnu.org/licenses/>.
 
-
+from mycroft.client.enclosure.display_manager import DisplayManager
 import datetime
 from os.path import abspath
 import tzlocal
@@ -25,18 +25,23 @@ from pytz import timezone
 from mycroft.skills.core import MycroftSkill
 from mycroft.util.log import getLogger
 import time
+from threading import Timer
 
-__author__ = 'ryanleesipes', 'jdorleans'
+__author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen'
 
 LOGGER = getLogger(__name__)
 
 
 # TODO - Localization
 class TimeSkill(MycroftSkill):
+
     def __init__(self):
         super(TimeSkill, self).__init__("TimeSkill")
         self.astral = Astral()
         self.init_format()
+        self.message = None
+        self.isClockRunning = False
+        self.timer = Timer(5, self._update_time)
 
     def init_format(self):
         if self.config_core.get('time_format') == 'full':
@@ -69,20 +74,35 @@ class TimeSkill(MycroftSkill):
             except:
                 return None
 
+    def get_time(self):
+        location = self.message.data.get("Location")  # optional parameter
+        nowUTC = datetime.datetime.now(timezone('UTC'))
+        tz = self.get_timezone(self.location_timezone)
+
+        if location:
+            tz = self.get_timezone(location)
+        if not tz:
+            self.speak_dialog("time.tz.not.found", {"location": location})
+            return
+
+            # Convert UTC to appropriate timezone and format
+        return nowUTC.astimezone(tz).strftime(self.format)
+
     def display(self, current_time):
         # Map time to display code for Mark1 faceplate
+
         code_dict = {
-            ':': 'BIEB',
-            '0': 'DIODCCOD',
-            '1': 'DIECODAC',
-            '2': 'DIKDKCOC',
-            '3': 'DIKCKCOD',
-            '4': 'DIOAIAOD',
-            '5': 'DIOCKCKD',
-            '6': 'DIODKCKD',
-            '7': 'DICACAOD',
-            '8': 'DIODKCOD',
-            '9': 'DIOAKAOD',
+            ':': 'CIICAA',
+            '0': 'EIMHEEMHAA',
+            '1': 'EIIEMHAEAA',
+            '2': 'EIEHEFMFAA',
+            '3': 'EIEFEFMHAA',
+            '4': 'EIMBABMHAA',
+            '5': 'EIMFEFEHAA',
+            '6': 'EIMHEFEHAA',
+            '7': 'EIEAEAMHAA',
+            '8': 'EIMHEFMHAA',
+            '9': 'EIMBEBMHAA',
         }
 
         value_list = [val for val in current_time]
@@ -91,57 +111,47 @@ class TimeSkill(MycroftSkill):
         for val in value_list[:5]:
             code_list.append(code_dict[val])
 
-        # clear screen
-        self.enclosure.reset()
+        # # clear screen
 
-        # x is used to offset the images
+        self.enclosure.mouth_display(img_code="HIAAAAAAAAAAAAAA",
+                                     refresh=False)
+        self.enclosure.mouth_display(img_code="HIAAAAAAAAAAAAAA",
+                                     x=24, refresh=False)
+
         xoffset = 7
         for code in code_list:
-            self.enclosure.mouth_display(code, x=xoffset, y=1,
+            self.enclosure.mouth_display(code, x=xoffset, y=0,
                                          refresh=False)
-            if code == 'BIEB':
+            if code == 'CIICAA':
                 xoffset += 2
             else:
                 xoffset += 4
 
+    def _update_time(self):
+        if self.isClockRunning:
+            current_time = self.get_time()
+            if self.timer.is_alive():
+                self.timer.cancel()
+                self.timer = Timer(5, self._update_time)
+            self.display(current_time)
+            self.timer.start()
+
     def handle_speak_intent(self, message):
-        location = message.data.get("Location")  # optional parameter
-        nowUTC = datetime.datetime.now(timezone('UTC'))
-        tz = self.get_timezone(self.location_timezone)
-
-        if location:
-            tz = self.get_timezone(location)
-        if not tz:
-            self.speak_dialog("time.tz.not.found", {"location": location})
-            return
-
-        # Convert UTC to appropriate timezone and format
-        current_time = nowUTC.astimezone(tz).strftime(self.format)
-        self.display(current_time)
-        self.enclosure.deactivate_mouth_events()
-        self.speak_dialog("time.current", {"time": current_time})
-
-        time.sleep(4)
-        self.enclosure.activate_mouth_events()
-        self.enclosure.reset()
+        self.message = message  # optional parameter
+        self.isClockRunning = True
+        self.speak_dialog("time.current", {"time": self.get_time()})
+        self._update_time()
 
     def handle_display_intent(self, message):
-        location = message.data.get("Location")  # optional parameter
-        nowUTC = datetime.datetime.now(timezone('UTC'))
-        tz = self.get_timezone(self.location_timezone)
-
-        if location:
-            tz = self.get_timezone(location)
-        if not tz:
-            self.speak_dialog("time.tz.not.found", {"location": location})
-            return
-
-        # Convert UTC to appropriate timezone and format
-        current_time = nowUTC.astimezone(tz).strftime(self.format)
-        self.display(current_time)
+        self.message = message
+        self.isClockRunning = True
+        self._update_time()
 
     def stop(self):
-        pass
+        self.timer.cancel()
+        self.timer = Timer(5, self._update_time) 
+        self.enclosure.reset()
+        self.isClockRunning = False
 
 
 def create_skill():
