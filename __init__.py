@@ -33,6 +33,7 @@ LOGGER = getLogger(__name__)
 
 
 # TODO - Localization
+# TODO - Use scheduled_skills.py and settings.py in Skill dir to implment timer
 class TimeSkill(MycroftSkill):
 
     def __init__(self):
