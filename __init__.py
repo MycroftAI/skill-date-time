@@ -34,13 +34,13 @@ class TimeSkill(MycroftSkill):
     def __init__(self):
         super(TimeSkill, self).__init__("TimeSkill")
         self.astral = Astral()
-        self.init_format()
 
-    def init_format(self):
+    @property
+    def format(self):
         if self.config_core.get('time_format') == 'full':
-            self.format = "%H:%M"
+            return "%H:%M"
         else:
-            self.format = "%I:%M, %p"
+            return "%I:%M, %p"
 
     def initialize(self):
         intent = IntentBuilder("TimeIntent").require("QueryKeyword") \
