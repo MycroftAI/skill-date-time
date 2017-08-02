@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Mycroft Core.  If not, see <http://www.gnu.org/licenses/>.
 
-import mycroft.client.enclosure.display_manager as DisplayManager
+from mycroft.version import CORE_VERSION_MAJOR, \
+     CORE_VERSION_MINOR, CORE_VERSION_BUILD
 import datetime
 from os.path import abspath
 import tzlocal
@@ -30,6 +31,12 @@ from threading import Timer
 __author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen'
 
 LOGGER = getLogger(__name__)
+
+compatible_core_version_sum = 27
+
+sum_of_core = CORE_VERSION_MAJOR + CORE_VERSION_MINOR + CORE_VERSION_BUILD
+if sum_of_core >= compatible_core_version_sum:
+    import mycroft.client.enclosure.display_manager as DisplayManager
 
 
 # TODO - Localization
@@ -128,7 +135,7 @@ class TimeSkill(MycroftSkill):
             else:
                 xoffset += 4
 
-    def _should_update_time(self):
+    def _should_display_time(self):
         _get_active = DisplayManager.get_active
         if _get_active() == "" or _get_active() == "TimeSkill":
             return True
@@ -136,24 +143,27 @@ class TimeSkill(MycroftSkill):
             return False
 
     def _update_time(self):
-        if self.isClockRunning and self._should_update_time():
+        if self.isClockRunning:
             current_time = self.get_time()
             if self.timer.is_alive():
                 self.timer.cancel()
                 self.timer = Timer(5, self._update_time)
-            self.display(current_time)
+            if self._should_display_time():
+                self.display(current_time)
             self.timer.start()
 
     def handle_speak_intent(self, message):
         self.message = message  # optional parameter
         self.isClockRunning = True
         self.speak_dialog("time.current", {"time": self.get_time()})
-        self._update_time()
+        if sum_of_core >= compatible_core_version_sum:
+            self._update_time()
 
     def handle_display_intent(self, message):
         self.message = message
         self.isClockRunning = True
-        self._update_time()
+        if sum_of_core >= compatible_core_version_sum:
+            self._update_time()
 
     def stop(self):
         self.timer.cancel()
