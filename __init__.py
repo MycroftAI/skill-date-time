@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Mycroft Core.  If not, see <http://www.gnu.org/licenses/>.
 
-from mycroft.client.enclosure.display_manager import DisplayManager
+import mycroft.client.enclosure.display_manager as DisplayManager
 import datetime
 from os.path import abspath
 import tzlocal
@@ -128,8 +128,15 @@ class TimeSkill(MycroftSkill):
             else:
                 xoffset += 4
 
+    def _should_update_time(self):
+        _get_active = DisplayManager.get_active
+        if _get_active() == "" or _get_active() == "TimeSkill":
+            return True
+        else:
+            return False
+
     def _update_time(self):
-        if self.isClockRunning:
+        if self.isClockRunning and self._should_update_time():
             current_time = self.get_time()
             if self.timer.is_alive():
                 self.timer.cancel()
@@ -150,7 +157,7 @@ class TimeSkill(MycroftSkill):
 
     def stop(self):
         self.timer.cancel()
-        self.timer = Timer(5, self._update_time) 
+        self.timer = Timer(5, self._update_time)
         self.enclosure.reset()
         self.isClockRunning = False
 
