@@ -27,8 +27,11 @@ from mycroft.skills.core import MycroftSkill
 from mycroft.util.log import getLogger
 import time
 from threading import Timer
+from tzwhere import tzwhere
+from geopy.geocoders import Nominatim
 
-__author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen'
+__author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen', \
+             'jarbas'
 
 LOGGER = getLogger(__name__)
 
@@ -58,13 +61,13 @@ class TimeSkill(MycroftSkill):
             return "%I:%M, %p"
 
     def initialize(self):
-        self.__build_speak_intent()
+        self.__build_time_intent()
         self.__build_display_intent()
 
-    def __build_speak_intent(self):
-        intent = IntentBuilder("SpeakIntent").require("QueryKeyword") \
+    def __build_time_intent(self):
+        intent = IntentBuilder("TimeIntent").require("QueryKeyword") \
             .require("TimeKeyword").optionally("Location").build()
-        self.register_intent(intent, self.handle_speak_intent)
+        self.register_intent(intent, self.handle_time_intent)
 
     def __build_display_intent(self):
         intent = IntentBuilder("DisplayIntent").require("DisplayKeyword") \
@@ -80,7 +83,17 @@ class TimeSkill(MycroftSkill):
                 # This handles codes like "America/Los_Angeles"
                 return timezone(locale)
             except:
-                return None
+                try:
+                    # get timezone from coordinates of OpenStreetMap Nominatim
+                    #  for this location
+                    geolocator = Nominatim()
+                    location = geolocator.geocode(locale)
+                    lat = float(location.latitude)
+                    lon = float(location.longitude)
+                    tz = tzwhere.tzwhere().tzNameAt(lat, lon)
+                    return timezone(tz)
+                except Exception as e:
+                    return None
 
     def get_time(self):
         location = self.message.data.get("Location")  # optional parameter
@@ -112,7 +125,8 @@ class TimeSkill(MycroftSkill):
             '8': 'EIMHEFMHAA',
             '9': 'EIMBEBMHAA',
         }
-
+        if current_time is None:
+            return
         value_list = [val for val in current_time]
         code_list = []
 
@@ -152,10 +166,13 @@ class TimeSkill(MycroftSkill):
                 self.display(current_time)
             self.timer.start()
 
-    def handle_speak_intent(self, message):
+    def handle_time_intent(self, message):
         self.message = message  # optional parameter
         self.isClockRunning = True
-        self.speak_dialog("time.current", {"time": self.get_time()})
+        ti = self.get_time()
+        if ti is None:
+            return
+        self.speak_dialog("time.current", {"time": ti})
         if sum_of_core >= compatible_core_version_sum:
             self._update_time()
 
