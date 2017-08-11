@@ -1,3 +1,5 @@
 pytz==2017.2
 tzlocal==1.3
 astral==1.4
+geopy
+git+https://github.com/seahawk1986/pytzwhere.git@fix_install
