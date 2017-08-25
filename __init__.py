@@ -171,6 +171,11 @@ class TimeSkill(MycroftSkill):
         self.enclosure.reset()
         self.isClockRunning = False
 
+    def shutdown(self):
+        super(TimeSkill, self).shutdown()
+        if self.timer:
+            self.timer.cancel()
+            self.timer = None
 
 def create_skill():
     return TimeSkill()
