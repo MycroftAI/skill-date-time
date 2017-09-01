@@ -46,9 +46,6 @@ class TimeSkill(MycroftSkill):
         super(TimeSkill, self).__init__("TimeSkill")
         self.astral = Astral()
         self.message = None
-        self._dir = dirname(__name__)  # fix AttributeError
-        self.isClockRunning = False if not 'isClockRunning' in self.settings else self.settings['isClockRunning']
-        self.timer = Timer(5, self._update_time)
 
     @property
     def format(self):
@@ -61,6 +58,9 @@ class TimeSkill(MycroftSkill):
         self.__build_speak_intent()
         self.__build_display_intent()
         self.__build_off_display_intent()
+        self.isClockRunning = False if not 'isClockRunning' in self.settings else self.settings['isClockRunning']
+        self.timer = Timer(5, self._update_time)
+        self.timer.start()
 
     def __build_speak_intent(self):
         intent = IntentBuilder("SpeakIntent").require("QueryKeyword") \
@@ -89,7 +89,7 @@ class TimeSkill(MycroftSkill):
                 return None
 
     def get_time(self):
-        location = self.message.data.get("Location")  # optional parameter
+        location = self.message.data.get("Location") if hasattr(self.message, 'data') else None  # optional parameter
         nowUTC = datetime.datetime.now(timezone('UTC'))
         tz = self.get_timezone(self.location_timezone)
 
@@ -149,7 +149,6 @@ class TimeSkill(MycroftSkill):
             return False
 
     def _update_time(self):
-        self.log.debug('update time; isClockRunning = {}; _dir = {}'.format(self.isClockRunning, self._dir))
         if self.isClockRunning:
             current_time = self.get_time()
             if self.timer.is_alive():
@@ -171,6 +170,7 @@ class TimeSkill(MycroftSkill):
         self.message = message
         self.isClockRunning = True
         self.settings['isClockRunning'] = True
+        self.settings.store()  # immediate persist
         if sum_of_core >= compatible_core_version_sum:
             self._update_time()
 
@@ -188,6 +188,7 @@ class TimeSkill(MycroftSkill):
         self.timer = Timer(5, self._update_time)
         self.enclosure.mouth_reset()
         self.settings['isClockRunning'] = False
+        self.settings.store()  # immediate persist
 
 
 def create_skill():
