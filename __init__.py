@@ -135,7 +135,9 @@ class TimeSkill(MycroftSkill):
     def _update_time(self):
         if self.isClockRunning:
             current_time = self.get_time()
-            if self.timer.is_alive():
+            if current_time is None:
+                return
+            if self.timer.is_alive() or self.timer.finished.is_set():
                 self.timer.cancel()
                 self.timer = Timer(5, self._update_time)
             if self._should_display_time():
