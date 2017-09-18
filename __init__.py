@@ -27,8 +27,7 @@ from mycroft.skills.core import MycroftSkill
 from mycroft.util.log import getLogger
 import time
 from threading import Timer
-from tzwhere import tzwhere
-from geopy.geocoders import Nominatim
+from geopy import geocoders
 
 __author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen', \
              'jarbas'
@@ -49,19 +48,19 @@ class TimeSkill(MycroftSkill):
     def __init__(self):
         super(TimeSkill, self).__init__("TimeSkill")
         self.astral = Astral()
-        self.init_format()
         self.message = None
         self.isClockRunning = False
         self.timer = Timer(5, self._update_time)
 
-    def init_format(self):
+    @property
+    def format(self):
         if self.config_core.get('time_format') == 'full':
-            self.format = "%H:%M"
+            return "%H:%M"
         else:
-            self.format = "%I:%M, %p"
+            return "%I:%M, %p"
 
     def initialize(self):
-        self.__build_speak_intent()
+        self.__build_time_intent()
         self.__build_display_intent()
 
     def __build_time_intent(self):
@@ -84,14 +83,9 @@ class TimeSkill(MycroftSkill):
                 return timezone(locale)
             except:
                 try:
-                    # get timezone from coordinates of OpenStreetMap Nominatim
-                    #  for this location
-                    geolocator = Nominatim()
-                    location = geolocator.geocode(locale)
-                    lat = float(location.latitude)
-                    lon = float(location.longitude)
-                    tz = tzwhere.tzwhere().tzNameAt(lat, lon)
-                    return timezone(tz)
+                    geolocator = geocoders.Nominatim()
+                    location = geolocator.geocode(locale).address
+                    return timezone(location)
                 except Exception as e:
                     self.log.error(e)
                     return None
@@ -111,8 +105,6 @@ class TimeSkill(MycroftSkill):
         return nowUTC.astimezone(tz).strftime(self.format)
 
     def display(self, current_time):
-        if current_time is None:
-            return # timezone failed
         # Map time to display code for Mark1 faceplate
 
         code_dict = {
@@ -128,7 +120,8 @@ class TimeSkill(MycroftSkill):
             '8': 'EIMHEFMHAA',
             '9': 'EIMBEBMHAA',
         }
-
+        if current_time is None:
+            return
         value_list = [val for val in current_time]
         code_list = []
 
@@ -173,7 +166,8 @@ class TimeSkill(MycroftSkill):
         self.isClockRunning = True
         time = self.get_time()
         if time is None:
-            return # timezone failed
+            # Tz not found already spoken
+            return
         self.speak_dialog("time.current", {"time": time})
         if sum_of_core >= compatible_core_version_sum:
             self._update_time()
