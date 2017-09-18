@@ -29,8 +29,7 @@ import time
 from threading import Timer
 from geopy import geocoders
 
-__author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen', \
-             'jarbas'
+__author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen'
 
 LOGGER = getLogger(__name__)
 
