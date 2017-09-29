@@ -58,18 +58,8 @@ class TimeSkill(MycroftSkill):
             return "%I:%M, %p"
 
     def initialize(self):
-        self.__build_speak_intent()
-        self.__build_display_intent()
-
-    def __build_speak_intent(self):
-        intent = IntentBuilder("SpeakIntent").require("QueryKeyword") \
-            .require("TimeKeyword").optionally("Location").build()
-        self.register_intent(intent, self.handle_speak_intent)
-
-    def __build_display_intent(self):
-        intent = IntentBuilder("DisplayIntent").require("DisplayKeyword") \
-            .require("TimeKeyword").optionally("Location").build()
-        self.register_intent(intent, self.handle_display_intent)
+        self.register_intent_file('ask.time.intent', self.handle_ask_time)
+        self.register_intent_file('show.time.intent', self.handle_show_time)
 
     def get_timezone(self, locale):
         try:
@@ -83,7 +73,7 @@ class TimeSkill(MycroftSkill):
                 return None
 
     def get_time(self):
-        location = self.message.data.get("Location")  # optional parameter
+        location = self.message.data.get("location")  # optional parameter
         nowUTC = datetime.datetime.now(timezone('UTC'))
         tz = self.get_timezone(self.location_timezone)
 
@@ -145,21 +135,23 @@ class TimeSkill(MycroftSkill):
     def _update_time(self):
         if self.isClockRunning:
             current_time = self.get_time()
-            if self.timer.is_alive():
+            if current_time is None:
+                return
+            if self.timer.is_alive() or self.timer.finished.is_set():
                 self.timer.cancel()
                 self.timer = Timer(5, self._update_time)
             if self._should_display_time():
                 self.display(current_time)
             self.timer.start()
 
-    def handle_speak_intent(self, message):
+    def handle_ask_time(self, message):
         self.message = message  # optional parameter
         self.isClockRunning = True
         self.speak_dialog("time.current", {"time": self.get_time()})
         if sum_of_core >= compatible_core_version_sum:
             self._update_time()
 
-    def handle_display_intent(self, message):
+    def handle_show_time(self, message):
         self.message = message
         self.isClockRunning = True
         if sum_of_core >= compatible_core_version_sum:
