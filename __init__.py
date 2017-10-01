@@ -18,7 +18,7 @@
 from mycroft.version import CORE_VERSION_MAJOR, \
      CORE_VERSION_MINOR, CORE_VERSION_BUILD
 import datetime
-from os.path import abspath
+from os.path import abspath, dirname
 import tzlocal
 from adapt.intent import IntentBuilder
 from astral import Astral
@@ -28,7 +28,7 @@ from mycroft.util.log import getLogger
 import time
 from threading import Timer
 
-__author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen'
+__author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen', 'skeledrew'
 
 LOGGER = getLogger(__name__)
 
@@ -38,7 +38,6 @@ sum_of_core = CORE_VERSION_MAJOR + CORE_VERSION_MINOR + CORE_VERSION_BUILD
 if sum_of_core >= compatible_core_version_sum:
     import mycroft.client.enclosure.display_manager as DisplayManager
 
-
 # TODO - Localization
 # TODO - Use scheduled_skills.py and settings.py in Skill dir to implment timer
 class TimeSkill(MycroftSkill):
@@ -47,8 +46,6 @@ class TimeSkill(MycroftSkill):
         super(TimeSkill, self).__init__("TimeSkill")
         self.astral = Astral()
         self.message = None
-        self.isClockRunning = False
-        self.timer = Timer(5, self._update_time)
 
     @property
     def format(self):
@@ -60,6 +57,10 @@ class TimeSkill(MycroftSkill):
     def initialize(self):
         self.__build_speak_intent()
         self.__build_display_intent()
+        self.__build_off_display_intent()
+        self.isClockRunning = False if not 'isClockRunning' in self.settings else self.settings['isClockRunning']
+        self.timer = Timer(5, self._update_time)
+        self.timer.start()
 
     def __build_speak_intent(self):
         intent = IntentBuilder("SpeakIntent").require("QueryKeyword") \
@@ -70,6 +71,11 @@ class TimeSkill(MycroftSkill):
         intent = IntentBuilder("DisplayIntent").require("DisplayKeyword") \
             .require("TimeKeyword").optionally("Location").build()
         self.register_intent(intent, self.handle_display_intent)
+
+    def __build_off_display_intent(self):
+        intent = IntentBuilder("OffDisplayIntent").require("HideKeyword") \
+            .require("TimeKeyword").optionally("Location").build()
+        self.register_intent(intent, self.handle_off_display_intent)
 
     def get_timezone(self, locale):
         try:
@@ -83,7 +89,7 @@ class TimeSkill(MycroftSkill):
                 return None
 
     def get_time(self):
-        location = self.message.data.get("Location")  # optional parameter
+        location = self.message.data.get("Location") if hasattr(self.message, 'data') else None  # optional parameter
         nowUTC = datetime.datetime.now(timezone('UTC'))
         tz = self.get_timezone(self.location_timezone)
 
@@ -155,6 +161,7 @@ class TimeSkill(MycroftSkill):
     def handle_speak_intent(self, message):
         self.message = message  # optional parameter
         self.isClockRunning = True
+        #self.settings['isClockRunning'] = True
         self.speak_dialog("time.current", {"time": self.get_time()})
         if sum_of_core >= compatible_core_version_sum:
             self._update_time()
@@ -162,6 +169,8 @@ class TimeSkill(MycroftSkill):
     def handle_display_intent(self, message):
         self.message = message
         self.isClockRunning = True
+        self.settings['isClockRunning'] = True
+        self.settings.store()  # immediate persist
         if sum_of_core >= compatible_core_version_sum:
             self._update_time()
 
@@ -170,6 +179,16 @@ class TimeSkill(MycroftSkill):
         self.timer = Timer(5, self._update_time)
         self.enclosure.reset()
         self.isClockRunning = False
+        #self.settings['isClockRunning'] = False
+
+    def handle_off_display_intent(self, message):
+        self.message = message
+        self.isClockRunning = False
+        self.timer.cancel()
+        self.timer = Timer(5, self._update_time)
+        self.enclosure.mouth_reset()
+        self.settings['isClockRunning'] = False
+        self.settings.store()  # immediate persist
 
     def shutdown(self):
         super(TimeSkill, self).shutdown()
