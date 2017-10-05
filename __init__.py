@@ -39,7 +39,7 @@ try:
     if check_version('0.8.19'):
         import mycroft.client.enclosure.display_manager as DisplayManager
         compatible_core = True
-except:
+except ImportError:
     compatible_core_version_sum = 27
     sum_of_core += CORE_VERSION_MAJOR
     sum_of_core += CORE_VERSION_MINOR
