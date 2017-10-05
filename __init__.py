@@ -32,11 +32,21 @@ __author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen'
 
 LOGGER = getLogger(__name__)
 
-compatible_core_version_sum = 27
+compatible_core = True
 
-sum_of_core = CORE_VERSION_MAJOR + CORE_VERSION_MINOR + CORE_VERSION_BUILD
-if sum_of_core >= compatible_core_version_sum:
-    import mycroft.client.enclosure.display_manager as DisplayManager
+try:
+    from mycroft.version import check_version
+    if check_version('0.8.19'):
+        import mycroft.client.enclosure.display_manager as DisplayManager
+        compatible_core = True
+except:
+    compatible_core_version_sum = 27
+    sum_of_core += CORE_VERSION_MAJOR
+    sum_of_core += CORE_VERSION_MINOR
+    sum_of_core += CORE_VERSION_BUILD
+    if sum_of_core >= compatible_core_version_sum:
+        import mycroft.client.enclosure.display_manager as DisplayManager
+        compatible_core = True
 
 
 # TODO - Localization
@@ -156,13 +166,13 @@ class TimeSkill(MycroftSkill):
         self.message = message  # optional parameter
         self.isClockRunning = True
         self.speak_dialog("time.current", {"time": self.get_time()})
-        if sum_of_core >= compatible_core_version_sum:
+        if compatible_core:
             self._update_time()
 
     def handle_display_intent(self, message):
         self.message = message
         self.isClockRunning = True
-        if sum_of_core >= compatible_core_version_sum:
+        if compatible_core:
             self._update_time()
 
     def stop(self):
