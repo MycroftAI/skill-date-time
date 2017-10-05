@@ -41,7 +41,7 @@ try:
         compatible_core = True
 except ImportError:
     compatible_core_version_sum = 27
-    sum_of_core += CORE_VERSION_MAJOR
+    sum_of_core = CORE_VERSION_MAJOR
     sum_of_core += CORE_VERSION_MINOR
     sum_of_core += CORE_VERSION_BUILD
     if sum_of_core >= compatible_core_version_sum:
