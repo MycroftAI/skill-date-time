@@ -32,7 +32,7 @@ __author__ = 'ryanleesipes', 'jdorleans', 'connorpenrod', 'michaelnguyen'
 
 LOGGER = getLogger(__name__)
 
-compatible_core = True
+compatible_core = False
 
 try:
     from mycroft.version import check_version
