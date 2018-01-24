@@ -1,0 +1,19 @@
+{
+    "name": "Date and Time",
+    "color": "#22a7f0",
+    "skillMetadata": {
+        "sections": [
+            {
+                "name": "Display",
+                "fields": [
+                    {
+                        "name": "show_time",
+                        "type": "checkbox",
+                        "label": "Show digital clock when idle",
+                        "value": "false"
+                    }
+                ]
+            }
+        ]
+    }
+}
