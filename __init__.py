@@ -88,7 +88,7 @@ def nice_time(dt, lang="en-us", speech=True, use_24hour=False,
                 # Mimic is speaking "23 34" as "two three 43" :(
                 # but it does say "2343" correctly.  Not ideal for general
                 # TTS but works for the moment.
-                speak += str[3:5]
+                speak += ":" + str[3:5]
 
         return speak
     else:
