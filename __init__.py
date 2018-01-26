@@ -171,6 +171,7 @@ class TimeSkill(MycroftSkill):
 
     def display(self, display_time):
         # Map characters to the display encoding for a Mark 1
+        # (4x8 except colon, which is 2x8)
         code_dict = {
             ':': 'CIICAA',
             '0': 'EIMHEEMHAA',
@@ -185,11 +186,20 @@ class TimeSkill(MycroftSkill):
             '9': 'EIMBEBMHAA',
         }
 
-        # clear screen (draw two blank halves)
-        self.enclosure.mouth_display(img_code="HIAAAAAAAAAAAAAA",
-                                     refresh=False)
-        self.enclosure.mouth_display(img_code="HIAAAAAAAAAAAAAA",
-                                     x=24, refresh=False)
+        
+        # clear screen (draw two blank sections, numbers cover rest)
+        if len(display_time) == 4:
+            # for 4-character times, 9x8 blank
+            self.enclosure.mouth_display(img_code="JIAAAAAAAAAAAAAAAAAA",
+                                         refresh=False)
+            self.enclosure.mouth_display(img_code="JIAAAAAAAAAAAAAAAAAA",
+                                         x=22, refresh=False)
+        else:
+            # for 5-character times, 7x8 blank
+            self.enclosure.mouth_display(img_code="HIAAAAAAAAAAAAAA",
+                                         refresh=False)
+            self.enclosure.mouth_display(img_code="HIAAAAAAAAAAAAAA",
+                                         x=24, refresh=False)
 
         # draw the time, centered on display
         xoffset = (32 - (4*(len(display_time))-2)) / 2
