@@ -22,85 +22,94 @@ from adapt.intent import IntentBuilder
 import mycroft.audio
 from mycroft.skills.core import MycroftSkill, intent_handler
 import mycroft.client.enclosure.display_manager as DisplayManager
+# from mycroft.util.format import nice_time
+from mycroft.util.format import pronounce_number
 
 
-# TODO: Move to mycroft.util.format.py
-def nice_time(dt, lang="en-us", speech=True, use_24hour=False,
-              use_ampm=False):
-    '''
+# TODO: This is temporary until nice_time() gets fixed in mycroft-core's
+# next release
+def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
+    """
     Format a time to a comfortable human format
 
     For example, generate 'five thirty' for speech or '5:30' for
     text display.
 
     Args:
+        lang (string): ignored
         dt (datetime): date to format (assumes already in local timezone)
-        lang (str): code for the language to use
         speech (bool): format for speech (default/True) or display (False)=Fal
         use_24hour (bool): output in 24-hour/military or 12-hour format
         use_ampm (bool): include the am/pm for 12-hour format
     Returns:
         (str): The formatted time string
-    '''
-
+    """
     if use_24hour:
         # e.g. "03:01" or "14:22"
-        str = dt.strftime("%H:%M")
+        string = dt.strftime("%H:%M")
     else:
         if use_ampm:
             # e.g. "3:01 AM" or "2:22 PM"
-            str = dt.strftime("%I:%M %p")
+            string = dt.strftime("%I:%M %p")
         else:
             # e.g. "3:01" or "2:22"
-            str = dt.strftime("%I:%M")
-        if str[0] == '0':
-            str = str[1:]  # strip leading zeros
-        return str
+            string = dt.strftime("%I:%M")
+        if string[0] == '0':
+            string = string[1:]  # strip leading zeros
 
     if not speech:
-        return str
+        return string
 
     # Generate a speakable version of the time
     if use_24hour:
         speak = ""
 
         # Either "0 8 hundred" or "13 hundred"
-        if str[0] == '0':
-            if str[1] == '0':
-                speak = "0 0"
-            else:
-                speak = "0 " + str[1]
+        if string[0] == '0':
+            speak += pronounce_number(int(string[0])) + " "
+            speak += pronounce_number(int(string[1]))
         else:
-            speak += str[0:2]
+            speak = pronounce_number(int(string[0:2]))
 
-        if str[3] == '0':
-            if str[4] == '0':
-                # Ignore the 00 in, for example, 13:00
-                speak += " hundred"  # TODO: Localize
-            else:
-                speak += " o " + str[4]  # TODO: Localize
+        speak += " "
+        if string[3:5] == '00':
+            speak += "hundred"
         else:
-            if str[0] == '0':
-                speak += " " + str[3:5]
+            if string[3] == '0':
+                speak += pronounce_number(0) + " "
+                speak += pronounce_number(int(string[4]))
             else:
-                # TODO: convert "23" to "twenty three" in helper method
-
-                # Mimic is speaking "23 34" as "two three 43" :(
-                # but it does say "2343" correctly.  Not ideal for general
-                # TTS but works for the moment.
-                speak += ":" + str[3:5]
-
+                speak += pronounce_number(int(string[3:5]))
         return speak
     else:
-        if lang.startswith("en"):
-            if dt.hour == 0 and dt.minute == 0:
-                return "midnight"  # TODO: localize
-            if dt.hour == 12 and dt.minute == 0:
-                return "noon"  # TODO: localize
-            # TODO: "half past 3", "a quarter of 4" and other idiomatic times
+        if dt.hour == 0 and dt.minute == 0:
+            return "midnight"
+        if dt.hour == 12 and dt.minute == 0:
+            return "noon"
+        # TODO: "half past 3", "a quarter of 4" and other idiomatic times
 
-            # lazy for now, let TTS handle speaking "03:22 PM" and such
-        return str
+        if dt.hour == 0:
+            speak = pronounce_number(12)
+        elif dt.hour < 13:
+            speak = pronounce_number(dt.hour)
+        else:
+            speak = pronounce_number(dt.hour-12)
+
+        if dt.minute == 0:
+            if not use_ampm:
+                return speak + " o'clock"
+        else:
+            if dt.minute < 10:
+                speak += " oh"
+            speak += " " + pronounce_number(dt.minute)
+
+        if use_ampm:
+            if dt.hour > 11:
+                speak += " PM"
+            else:
+                speak += " AM"
+
+        return speak
 
 
 class TimeSkill(MycroftSkill):
@@ -110,10 +119,13 @@ class TimeSkill(MycroftSkill):
         self.astral = Astral()
         self.displayed_time = None
         self.display_tz = None
-        self.active = False
+        self.answering_query = False
 
     def initialize(self):
         # Start a callback that repeats every 10 seconds
+        # TODO: Add mechanism to only start timer when UI setting
+        #       is checked, but this requires a notifier for settings
+        #       updates from the web.
         now = datetime.datetime.now()
         callback_time = (datetime.datetime(now.year, now.month, now.day,
                                            now.hour, now.minute) +
@@ -166,6 +178,7 @@ class TimeSkill(MycroftSkill):
         if not dt:
             return
 
+        self.log.debug("********* Time: " + str(dt))
         return nice_time(dt, self.lang, speech=True,
                          use_24hour=self.use_24hour)
 
@@ -219,10 +232,12 @@ class TimeSkill(MycroftSkill):
         return _get_active() == "" or _get_active() == "TimeSkill"
 
     def update_display(self, force=False):
-        if self.active:
+        # Don't show idle time when answering a query to prevent
+        # overwriting the displayed value.
+        if self.answering_query:
             return
 
-        if self.settings["show_time"].lower() == "true":
+        if self.settings.get("show_time", "false") == "true":
             if force or self._should_display_time():
                 # user requested display of time
                 current_time = self.get_display_time()
@@ -250,14 +265,14 @@ class TimeSkill(MycroftSkill):
         self.speak_dialog("time.current", {"time": current_time})
 
         # and briefly show the time
-        self.active = True
+        self.answering_query = True
         self.enclosure.deactivate_mouth_events()
         self.display(self.get_display_time(location))
         time.sleep(5)
         mycroft.audio.wait_while_speaking()
         self.enclosure.mouth_reset()
         self.enclosure.activate_mouth_events()
-        self.active = False
+        self.answering_query = False
         self.displayed_time = None
 
     @intent_handler(IntentBuilder("").require("Display").require("Time").
@@ -295,14 +310,14 @@ class TimeSkill(MycroftSkill):
         self.speak_dialog("date", {"date": speak})
 
         # and briefly show the time
-        self.active = True
+        self.answering_query = True
         self.enclosure.deactivate_mouth_events()
         self.enclosure.mouth_text(show)
         time.sleep(10)
         mycroft.audio.wait_while_speaking()
         self.enclosure.mouth_reset()
         self.enclosure.activate_mouth_events()
-        self.active = False
+        self.answering_query = False
         self.displayed_time = None
 
 
