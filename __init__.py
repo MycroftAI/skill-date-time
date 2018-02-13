@@ -178,7 +178,6 @@ class TimeSkill(MycroftSkill):
         if not dt:
             return
 
-        self.log.debug("********* Time: " + str(dt))
         return nice_time(dt, self.lang, speech=True,
                          use_24hour=self.use_24hour)
 
@@ -216,7 +215,6 @@ class TimeSkill(MycroftSkill):
 
         # draw the time, centered on display
         xoffset = (32 - (4*(len(display_time))-2)) / 2
-        self.log.debug("Offset: "+str(display_time))
         for c in display_time:
             if c in code_dict:
                 self.enclosure.mouth_display(img_code=code_dict[c],
@@ -226,10 +224,10 @@ class TimeSkill(MycroftSkill):
                 else:
                     xoffset += 4  # digits are 3 pixels + a space
 
-    def _should_display_time(self):
+    def _is_display_idle(self):
         # check if the display is being used by another skill right now
-        _get_active = DisplayManager.get_active
-        return _get_active() == "" or _get_active() == "TimeSkill"
+        # or _get_active() == "TimeSkill"
+        return DisplayManager.get_active() == ''
 
     def update_display(self, force=False):
         # Don't show idle time when answering a query to prevent
@@ -238,20 +236,23 @@ class TimeSkill(MycroftSkill):
             return
 
         if self.settings.get("show_time", "false") == "true":
-            if force or self._should_display_time():
-                # user requested display of time
+            # user requested display of time while idle
+            if force or self._is_display_idle():
                 current_time = self.get_display_time()
                 if self.displayed_time != current_time:
                     self.displayed_time = current_time
                     self.display(current_time)
+                    DisplayManager.remove_active()  # leave in 'idle'
             else:
                 self.displayed_time = None  # another skill is using display
         else:
-            # clear the display
+            # time display is not wanted
             if self.displayed_time:
-                self.enclosure.mouth_reset()
+                if self._is_display_idle():
+                    # erase the existing displayed time
+                    self.enclosure.mouth_reset()
+                    DisplayManager.remove_active()  # leave in 'idle'
                 self.displayed_time = None
-            return
 
     @intent_handler(IntentBuilder("").require("Query").require("Time").
                     optionally("Location"))
