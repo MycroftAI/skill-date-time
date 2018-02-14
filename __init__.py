@@ -237,7 +237,7 @@ class TimeSkill(MycroftSkill):
 
         if self.settings.get("show_time", "false") == "true":
             # user requested display of time while idle
-            if force or self._is_display_idle():
+            if (force is True) or self._is_display_idle():
                 current_time = self.get_display_time()
                 if self.displayed_time != current_time:
                     self.displayed_time = current_time
