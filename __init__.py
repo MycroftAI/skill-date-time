@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2017, Mycroft AI Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +29,6 @@ from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 
 # TODO: This is temporary until nice_time() gets fixed in mycroft-core's
 # next release
-
 def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
     """
     Format a time to a comfortable human format
@@ -102,7 +100,7 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
         elif dt.hour < 13:
             speak = pronounce_number(dt.hour)
         else:
-            speak = pronounce_number(dt.hour - 12)
+            speak = pronounce_number(dt.hour-12)
 
         if dt.minute == 0:
             if not use_ampm:
@@ -241,7 +239,7 @@ class TimeSkill(MycroftSkill):
                                          x=24, refresh=False)
 
         # draw the time, centered on display
-        xoffset = (32 - (4 * (len(display_time)) - 2)) / 2
+        xoffset = (32-(4*(len(display_time))-2)) / 2
         for c in display_time:
             if c in code_dict:
                 self.enclosure.mouth_display(img_code=code_dict[c],
