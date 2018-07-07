@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2017, Mycroft AI Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,10 +25,12 @@ from mycroft.skills.core import MycroftSkill, intent_handler
 import mycroft.client.enclosure.display_manager as DisplayManager
 # from mycroft.util.format import nice_time
 from mycroft.util.format import pronounce_number
+from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 
 
 # TODO: This is temporary until nice_time() gets fixed in mycroft-core's
 # next release
+
 def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
     """
     Format a time to a comfortable human format
@@ -44,6 +47,12 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
     Returns:
         (str): The formatted time string
     """
+
+    # If language is German, use nice_time_de
+    lang_lower = str(lang).lower()
+    if lang_lower.startswith("de"):
+        return nice_time_de(dt, speech, use_24hour, use_ampm)
+
     if use_24hour:
         # e.g. "03:01" or "14:22"
         string = dt.strftime("%H:%M")
@@ -93,7 +102,7 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
         elif dt.hour < 13:
             speak = pronounce_number(dt.hour)
         else:
-            speak = pronounce_number(dt.hour-12)
+            speak = pronounce_number(dt.hour - 12)
 
         if dt.minute == 0:
             if not use_ampm:
@@ -111,6 +120,25 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
 
         return speak
 
+def nice_date_de(local_date):
+
+    # dates are returned as, for example:
+    # "Samstag, der siebte Juli zweitausendachtzehn"
+    # this returns the years as regular numbers,
+    # not 19 hundred ..., but one thousand nine hundred
+    # which is fine from the year 2000
+
+    de_months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+                 'Juli', 'August', 'September', 'October', 'November',
+                 'Dezember']
+
+    de_weekdays = ['Montag', 'Dienstag', 'Mittwoch',
+                   'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+
+    return de_weekdays[local_date.weekday()] + ", der " \
+            + pronounce_ordinal_de(local_date.day) + " " \
+            + de_months[local_date.month - 1] \
+            + " " + pronounce_number(local_date.year, lang = "de")
 
 class TimeSkill(MycroftSkill):
 
@@ -198,7 +226,6 @@ class TimeSkill(MycroftSkill):
             '9': 'EIMBEBMHAA',
         }
 
-        
         # clear screen (draw two blank sections, numbers cover rest)
         if len(display_time) == 4:
             # for 4-character times, 9x8 blank
@@ -214,7 +241,7 @@ class TimeSkill(MycroftSkill):
                                          x=24, refresh=False)
 
         # draw the time, centered on display
-        xoffset = (32 - (4*(len(display_time))-2)) / 2
+        xoffset = (32 - (4 * (len(display_time)) - 2)) / 2
         for c in display_time:
             if c in code_dict:
                 self.enclosure.mouth_display(img_code=code_dict[c],
@@ -301,7 +328,14 @@ class TimeSkill(MycroftSkill):
             return
 
         # Get the current date
-        speak = local_date.strftime("%A, %B %-d, %Y")
+        # If language is German, use nice_date_de
+        # otherwise use locale
+
+        lang_lower = str(self.lang).lower()
+        if lang_lower.startswith("de"):
+            speak = nice_date_de(local_date)
+        else:
+            speak = local_date.strftime("%A, %B %-d, %Y")
         if self.config_core.get('date_format') == 'MDY':
             show = local_date.strftime("%-m/%-d/%Y")
         else:
