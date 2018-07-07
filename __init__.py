@@ -224,6 +224,7 @@ class TimeSkill(MycroftSkill):
             '9': 'EIMBEBMHAA',
         }
 
+        
         # clear screen (draw two blank sections, numbers cover rest)
         if len(display_time) == 4:
             # for 4-character times, 9x8 blank
@@ -239,7 +240,7 @@ class TimeSkill(MycroftSkill):
                                          x=24, refresh=False)
 
         # draw the time, centered on display
-        xoffset = (32-(4*(len(display_time))-2)) / 2
+        xoffset = (32 - (4*(len(display_time))-2)) / 2
         for c in display_time:
             if c in code_dict:
                 self.enclosure.mouth_display(img_code=code_dict[c],
