@@ -66,10 +66,10 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
 
         # Either "0 8 hundred" or "13 hundred"
         if string[0] == '0':
-            speak += pronounce_number(int(string[0])) + " "
-            speak += pronounce_number(int(string[1]))
+            speak += pronounce_number(int(string[0]), lang) + " "
+            speak += pronounce_number(int(string[1]), lang)
         else:
-            speak = pronounce_number(int(string[0:2]))
+            speak = pronounce_number(int(string[0:2]), lang)
 
         speak += " "
         if string[3:5] == '00':
@@ -77,9 +77,9 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
         else:
             if string[3] == '0':
                 speak += pronounce_number(0) + " "
-                speak += pronounce_number(int(string[4]))
+                speak += pronounce_number(int(string[4]), lang)
             else:
-                speak += pronounce_number(int(string[3:5]))
+                speak += pronounce_number(int(string[3:5]), lang)
         return speak
     else:
         if dt.hour == 0 and dt.minute == 0:
@@ -89,11 +89,11 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
         # TODO: "half past 3", "a quarter of 4" and other idiomatic times
 
         if dt.hour == 0:
-            speak = pronounce_number(12)
+            speak = pronounce_number(12, lang)
         elif dt.hour < 13:
-            speak = pronounce_number(dt.hour)
+            speak = pronounce_number(dt.hour, lang)
         else:
-            speak = pronounce_number(dt.hour-12)
+            speak = pronounce_number(dt.hour - 12, lang)
 
         if dt.minute == 0:
             if not use_ampm:
@@ -101,7 +101,7 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
         else:
             if dt.minute < 10:
                 speak += " oh"
-            speak += " " + pronounce_number(dt.minute)
+            speak += " " + pronounce_number(dt.minute, lang)
 
         if use_ampm:
             if dt.hour > 11:
