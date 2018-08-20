@@ -7,7 +7,7 @@ are given in 12-hour (2:30 pm) or 24-hour format (14:30) based on the
 Time Format setting at [Home](https://home.mycroft.ai/#/setting/basic)
 
 Time can optionally be shown on a display, like a digital clock.  See
-the [skill setting](https://home.mycroft.ai/#/skill).
+the [Skill Setting](https://home.mycroft.ai/#/skill).
 
 
 ## Examples 
@@ -18,4 +18,4 @@ the [skill setting](https://home.mycroft.ai/#/skill).
 * "Tell me the day of the week"
 
 ## Credits 
-Mycroft AI
+@MycroftAI
