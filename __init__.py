@@ -261,7 +261,7 @@ class TimeSkill(MycroftSkill):
         if self.answering_query:
             return
 
-        if self.settings.get("show_time", "false") == "true":
+        if self.settings.get("show_time", False):
             # user requested display of time while idle
             if (force is True) or self._is_display_idle():
                 current_time = self.get_display_time()
@@ -316,7 +316,7 @@ class TimeSkill(MycroftSkill):
                 self.display_tz = tz
 
         # show time immediately
-        self.settings["show_time"] = "true"
+        self.settings["show_time"] = True
         self.update_display(True)
 
     @intent_handler(IntentBuilder("").require("Query").require("Date").
