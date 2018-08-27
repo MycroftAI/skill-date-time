@@ -21,7 +21,6 @@ import time
 from adapt.intent import IntentBuilder
 import mycroft.audio
 from mycroft.skills.core import MycroftSkill, intent_handler
-import mycroft.client.enclosure.display_manager as DisplayManager
 # from mycroft.util.format import nice_time
 from mycroft.util.format import pronounce_number
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
@@ -224,7 +223,7 @@ class TimeSkill(MycroftSkill):
             '9': 'EIMBEBMHAA',
         }
 
-        
+
         # clear screen (draw two blank sections, numbers cover rest)
         if len(display_time) == 4:
             # for 4-character times, 9x8 blank
@@ -253,7 +252,7 @@ class TimeSkill(MycroftSkill):
     def _is_display_idle(self):
         # check if the display is being used by another skill right now
         # or _get_active() == "TimeSkill"
-        return DisplayManager.get_active() == ''
+        return self.enclosure.display_manager.get_active() == ''
 
     def update_display(self, force=False):
         # Don't show idle time when answering a query to prevent
@@ -268,7 +267,8 @@ class TimeSkill(MycroftSkill):
                 if self.displayed_time != current_time:
                     self.displayed_time = current_time
                     self.display(current_time)
-                    DisplayManager.remove_active()  # leave in 'idle'
+                    # return mouth to 'idle'
+                    self.enclosure.display_manager.remove_active()
             else:
                 self.displayed_time = None  # another skill is using display
         else:
@@ -277,7 +277,8 @@ class TimeSkill(MycroftSkill):
                 if self._is_display_idle():
                     # erase the existing displayed time
                     self.enclosure.mouth_reset()
-                    DisplayManager.remove_active()  # leave in 'idle'
+                    # return mouth to 'idle'
+                    self.enclosure.display_manager.remove_active()
                 self.displayed_time = None
 
     @intent_handler(IntentBuilder("").require("Query").require("Time").
