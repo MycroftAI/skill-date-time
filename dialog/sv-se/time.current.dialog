@@ -1,3 +1,5 @@
 {{time}}
+{{time}}
 Klockan är {{time}}
-Klockan är nu {{time}}
+Den är {{time}}
+För närvarande {{time}}
