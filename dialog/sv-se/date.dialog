@@ -1,3 +1,4 @@
 {{date}}
-Det är {{date}}
-Idag är det {{date}}
+{{date}}
+det är {{date}}
+idag är det {{date}}

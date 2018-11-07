@@ -1,1 +1,1 @@
-(på|vid|i) (?P<Location>.*)
+(vid|på|för) (?P<Location>.*)
