@@ -14,26 +14,27 @@ Mycroft.Delegate {
         spacing: Kirigami.Units.largeSpacing
         
         Item {
-            height: Kirigami.Units.largeSpacing * 4
+            height: Kirigami.Units.largeSpacing * 10
         }
         
-        Kirigami.Heading {
+        Label {
             id: time
             Layout.alignment: Qt.AlignHCenter
-            level: 1
             Layout.columnSpan: 2
-            wrapMode: Text.WordWrap
             font.capitalization: Font.AllUppercase
+            font.pixelSize: 120
+            color: "white"
             text: sessionData.time_string
         }
-        Kirigami.Heading {
-            id: ampm
+        Label {
+            id: date
             Layout.alignment: Qt.AlignHCenter
-            level: 2
+            font.pixelSize: 40
             Layout.columnSpan: 2
             wrapMode: Text.WordWrap
             font.capitalization: Font.AllUppercase
-            text: sessionData.ampm_string
+            text: sessionData.date_string
+            color: "gray"
         }
     }
 }
