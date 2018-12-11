@@ -137,6 +137,7 @@ def nice_date_de(local_date):
             + de_months[local_date.month - 1] \
             + " " + pronounce_number(local_date.year, lang = "de")
 
+
 class TimeSkill(MycroftSkill):
 
     def __init__(self):
@@ -171,6 +172,18 @@ class TimeSkill(MycroftSkill):
                 return timezone(locale)
             except:
                 return None
+
+    def get_weekday(self, location=None):
+        local_date = self.get_local_datetime(location)
+        return local_date.strftime("%A")
+
+    def get_month_date(self, location=None):
+        local_date = self.get_local_datetime(location)
+        return local_date.strftime("%B %d")
+
+    def get_year(self, location=None):
+        local_date = self.get_local_datetime(location)
+        return local_date.strftime("%Y")
 
     def get_local_datetime(self, location):
         nowUTC = datetime.datetime.now(timezone('UTC'))
@@ -275,7 +288,7 @@ class TimeSkill(MycroftSkill):
         self.gui['ampm_string'] = ''
         self.gui['date_string'] = self.get_display_date()
         self.gui['background'] = 'file:///opt/mycroft/skills/mycroft-date-time.mycroftai/ui/bg.png'
-        self.gui.show_page('main.qml')
+        self.gui.show_page('time.qml')
 
     def _is_display_idle(self):
         # check if the display is being used by another skill right now
@@ -355,8 +368,6 @@ class TimeSkill(MycroftSkill):
                     optionally("Location"))
     def handle_query_date(self, message):
         location = message.data.get("Location")
-        if not local_date:
-            return
 
         # Get the current date
         # If language is German, use nice_date_de
@@ -366,17 +377,31 @@ class TimeSkill(MycroftSkill):
         # speak it
         self.speak_dialog("date", {"date": speak})
 
-        # and briefly show the time
-        show = self.get_display_date(location)
+        # and briefly show the date
         self.answering_query = True
-        self.enclosure.deactivate_mouth_events()
-        self.enclosure.mouth_text(show)
+        self.show_date(location)
         time.sleep(10)
         mycroft.audio.wait_while_speaking()
         self.enclosure.mouth_reset()
         self.enclosure.activate_mouth_events()
         self.answering_query = False
         self.displayed_time = None
+
+    def show_date(self, location):
+        self.show_date_mark1(location)
+        self.show_date_mark2(location)
+
+    def show_date_mark1(self, location):
+        show = self.get_display_date(location)
+        self.enclosure.deactivate_mouth_events()
+        self.enclosure.mouth_text(show)
+
+    def show_date_mark2(self, location):
+        self.gui['date_string'] = self.get_display_date(location)
+        self.gui['weekday_string'] = self.get_weekday(location)
+        self.gui['month_string'] = self.get_month_date(location)
+        self.gui['year_string'] = self.get_year(location)
+        self.gui.show_page('date.qml')
 
 
 def create_skill():
