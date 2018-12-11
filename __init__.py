@@ -188,6 +188,21 @@ class TimeSkill(MycroftSkill):
 
         return nowUTC.astimezone(tz)
 
+    def get_spoken_date(self, location=None):
+        local_date = self.get_local_datetime(location)
+        lang_lower = str(self.lang).lower()
+        if lang_lower.startswith("de"):
+            return nice_date_de(local_date)
+        else:
+            return local_date.strftime("%A, %B %-d, %Y")
+
+    def get_display_date(self, location=None):
+        local_date = self.get_local_datetime(location)
+        if self.config_core.get('date_format') == 'MDY':
+            return local_date.strftime("%-m/%-d/%Y")
+        else:
+            return local_date.strftime("%Y/%-d/%-m")
+
     def get_display_time(self, location=None):
         # Get a formatted digital clock time based on the user preferences
         dt = self.get_local_datetime(location)
@@ -211,7 +226,7 @@ class TimeSkill(MycroftSkill):
         self.display_mark1(display_time)
         self.display_mark2(display_time)
 
-    def display_mark1(self, display_time)
+    def display_mark1(self, display_time):
         # Map characters to the display encoding for a Mark 1
         # (4x8 except colon, which is 2x8)
         code_dict = {
@@ -254,10 +269,11 @@ class TimeSkill(MycroftSkill):
                 else:
                     xoffset += 4  # digits are 3 pixels + a space
 
-    def display_mark2(self.display_time):
+    def display_mark2(self, display_time):
         """ Display time on the Mark-2. """
-        self.gui['time_string'] = self.display_time
+        self.gui['time_string'] = display_time
         self.gui['ampm_string'] = ''
+        self.gui['date_string'] = self.get_display_date()
         self.gui['background'] = 'file:///opt/mycroft/skills/mycroft-date-time.mycroftai/ui/bg.png'
         self.gui.show_page('main.qml')
 
@@ -271,6 +287,9 @@ class TimeSkill(MycroftSkill):
         # overwriting the displayed value.
         if self.answering_query:
             return
+        self.gui['time_string'] = self.get_display_time()
+        self.gui['date_string'] = self.get_display_date()
+        self.gui['ampm_string'] = '' # TODO
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -301,8 +320,6 @@ class TimeSkill(MycroftSkill):
         if not current_time:
             return
 
-        self.gui['foo'] = 'bar'
-        self.gui.show_page('test.qml')
         # speak it
         self.speak_dialog("time.current", {"time": current_time})
 
@@ -337,7 +354,7 @@ class TimeSkill(MycroftSkill):
     @intent_handler(IntentBuilder("").require("Query").require("Date").
                     optionally("Location"))
     def handle_query_date(self, message):
-        local_date = self.get_local_datetime(message.data.get("Location"))
+        location = message.data.get("Location")
         if not local_date:
             return
 
@@ -345,20 +362,12 @@ class TimeSkill(MycroftSkill):
         # If language is German, use nice_date_de
         # otherwise use locale
 
-        lang_lower = str(self.lang).lower()
-        if lang_lower.startswith("de"):
-            speak = nice_date_de(local_date)
-        else:
-            speak = local_date.strftime("%A, %B %-d, %Y")
-        if self.config_core.get('date_format') == 'MDY':
-            show = local_date.strftime("%-m/%-d/%Y")
-        else:
-            show = local_date.strftime("%Y/%-d/%-m")
-
+        speak = self.get_spoken_date(location)
         # speak it
         self.speak_dialog("date", {"date": speak})
 
         # and briefly show the time
+        show = self.get_display_date(location)
         self.answering_query = True
         self.enclosure.deactivate_mouth_events()
         self.enclosure.mouth_text(show)
