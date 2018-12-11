@@ -207,6 +207,11 @@ class TimeSkill(MycroftSkill):
                          use_24hour=self.use_24hour)
 
     def display(self, display_time):
+        """ Display the time. """
+        self.display_mark1(display_time)
+        self.display_mark2(display_time)
+
+    def display_mark1(self, display_time)
         # Map characters to the display encoding for a Mark 1
         # (4x8 except colon, which is 2x8)
         code_dict = {
@@ -249,6 +254,13 @@ class TimeSkill(MycroftSkill):
                 else:
                     xoffset += 4  # digits are 3 pixels + a space
 
+    def display_mark2(self.display_time):
+        """ Display time on the Mark-2. """
+        self.gui['time_string'] = self.display_time
+        self.gui['ampm_string'] = ''
+        self.gui['background'] = 'file:///opt/mycroft/skills/mycroft-date-time.mycroftai/ui/bg.png'
+        self.gui.show_page('main.qml')
+
     def _is_display_idle(self):
         # check if the display is being used by another skill right now
         # or _get_active() == "TimeSkill"
@@ -289,6 +301,8 @@ class TimeSkill(MycroftSkill):
         if not current_time:
             return
 
+        self.gui['foo'] = 'bar'
+        self.gui.show_page('test.qml')
         # speak it
         self.speak_dialog("time.current", {"time": current_time})
 
