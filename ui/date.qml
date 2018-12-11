@@ -22,6 +22,7 @@ Mycroft.Delegate {
             Layout.alignment: Qt.AlignHCenter
             Layout.columnSpan: 2
             font.capitalization: Font.AllUppercase
+            font.bold: true
             font.pixelSize: 120
             color: "white"
             text: sessionData.weekday_string
@@ -33,18 +34,18 @@ Mycroft.Delegate {
             Layout.columnSpan: 2
             wrapMode: Text.WordWrap
             font.capitalization: Font.AllUppercase
-            text: sessionData.month_sting
+            text: sessionData.month_string
             color: "lightblue"
         }
         Label {
             id: year
             Layout.alignment: Qt.AlignHCenter
-            font.pixelSize: 120
+            font.pixelSize: 180
             Layout.columnSpan: 2
             wrapMode: Text.WordWrap
             font.capitalization: Font.AllUppercase
             text: sessionData.year_string
-            color: "lighgrey"
+            color: "lightgrey"
         }
     }
 }
