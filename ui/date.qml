@@ -6,11 +6,11 @@ import org.kde.kirigami 2.4 as Kirigami
 import Mycroft 1.0 as Mycroft
 
 Mycroft.Delegate {
-    skillBackgroundSource: sessionData.background
-    ColumnLayout {
-        id: grid
-        Layout.fillWidth: true
+    skillBackgroundSource: Qt.resolvedUrl('bg.png')
+    Column {
+        id: column
         width: parent.width
+        height: parent.height
         spacing: Kirigami.Units.largeSpacing
         
         Item {
@@ -19,30 +19,37 @@ Mycroft.Delegate {
         
         Label {
             id: weekday
-            Layout.alignment: Qt.AlignHCenter
-            Layout.columnSpan: 2
-            font.capitalization: Font.AllUppercase
+            //font.family: Noto Sans
             font.bold: true
-            font.pixelSize: 120
+            width: parent.width
+            height: 150
+            fontSizeMode: Text.HorizontalFit
+            font.pixelSize: 300
+            minimumPixelSize: 10
             color: "white"
+            font.capitalization: Font.AllUppercase
             text: sessionData.weekday_string
         }
         Label {
             id: month
-            Layout.alignment: Qt.AlignHCenter
-            font.pixelSize: 80
-            Layout.columnSpan: 2
-            wrapMode: Text.WordWrap
+            width: parent.width
+            height: 120
+            fontSizeMode: Text.HorizontalFit
+            //font.family: Noto Sans
+            font.pixelSize: 300
+            minimumPixelSize: 10
             font.capitalization: Font.AllUppercase
             text: sessionData.month_string
             color: "lightblue"
         }
-        Label {
+        Text {
             id: year
-            Layout.alignment: Qt.AlignHCenter
-            font.pixelSize: 180
-            Layout.columnSpan: 2
-            wrapMode: Text.WordWrap
+            width: parent.width
+            height: parent.height
+            fontSizeMode: Text.HorizontalFit
+            //font.family: Noto Sans
+            font.pixelSize: 300
+            minimumPixelSize: 10
             font.capitalization: Font.AllUppercase
             text: sessionData.year_string
             color: "lightgrey"

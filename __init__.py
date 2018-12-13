@@ -287,7 +287,6 @@ class TimeSkill(MycroftSkill):
         self.gui['time_string'] = display_time
         self.gui['ampm_string'] = ''
         self.gui['date_string'] = self.get_display_date()
-        self.gui['background'] = 'file:///opt/mycroft/skills/mycroft-date-time.mycroftai/ui/bg.png'
         self.gui.show_page('time.qml')
 
     def _is_display_idle(self):
