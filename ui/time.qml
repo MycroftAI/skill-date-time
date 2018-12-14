@@ -18,10 +18,11 @@ Mycroft.Delegate {
             font.capitalization: Font.AllUppercase
             font.family: "Noto Sans"
             font.bold: true
+            font.weight: Font.Bold
             font.pixelSize: 300
             color: "white"
             lineHeight: 0.6
-            text: parseInt(sessionData.time_string.split(":")[0])
+            text: sessionData.time_string.split(":")[0]
         }
         Label {
             id: minute
@@ -29,10 +30,11 @@ Mycroft.Delegate {
             font.pixelSize: 300
             wrapMode: Text.WordWrap
             font.family: "Noto Sans"
-            font.bold: true
+            font.bold: false
+            font.weight: Font.Normal
             lineHeight: 0.6
             font.capitalization: Font.AllUppercase
-            text: parseInt(sessionData.time_string.split(":")[1])
+            text: sessionData.time_string.split(":")[1]
             color: "#22A7F0"
         }
     }
