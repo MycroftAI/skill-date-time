@@ -11,7 +11,7 @@ Mycroft.Delegate {
         id: column
         width: parent.width
         height: parent.height
-        spacing: Kirigami.Units.largeSpacing
+        spacing: Kirigami.Units.smallSpacing
         
         Item {
             height: Kirigami.Units.largeSpacing * 10
@@ -19,10 +19,10 @@ Mycroft.Delegate {
         
         Label {
             id: weekday
-            //font.family: Noto Sans
-            font.bold: true
+            font.family: "Noto Sans"
+            font.bold: false
             width: parent.width
-            height: 150
+            height: 100
             fontSizeMode: Text.HorizontalFit
             font.pixelSize: 300
             minimumPixelSize: 10
@@ -35,19 +35,20 @@ Mycroft.Delegate {
             width: parent.width
             height: 120
             fontSizeMode: Text.HorizontalFit
-            //font.family: Noto Sans
+            font.family: "Noto Sans"
             font.pixelSize: 300
             minimumPixelSize: 10
             font.capitalization: Font.AllUppercase
             text: sessionData.month_string
-            color: "lightblue"
+            color: "#22A7F0"
         }
-        Text {
+        Label {
             id: year
             width: parent.width
-            height: parent.height
+            height: 120
             fontSizeMode: Text.HorizontalFit
-            //font.family: Noto Sans
+            font.bold: bold
+            font.family: "Noto Sans"
             font.pixelSize: 300
             minimumPixelSize: 10
             font.capitalization: Font.AllUppercase

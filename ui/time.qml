@@ -11,30 +11,29 @@ Mycroft.Delegate {
         id: grid
         Layout.fillWidth: true
         width: parent.width
-        spacing: Kirigami.Units.largeSpacing
-        
-        Item {
-            height: Kirigami.Units.largeSpacing * 10
-        }
-        
+        spacing: 0
         Label {
-            id: time
-            Layout.alignment: Qt.AlignHCenter
-            Layout.columnSpan: 2
+            id: hour
+            Layout.alignment: Qt.AlignRight
             font.capitalization: Font.AllUppercase
-            font.pixelSize: 120
+            font.family: "Noto Sans"
+            font.bold: true
+            font.pixelSize: 300
             color: "white"
-            text: sessionData.time_string
+            lineHeight: 0.6
+            text: parseInt(sessionData.time_string.split(":")[0])
         }
         Label {
-            id: date
-            Layout.alignment: Qt.AlignHCenter
-            font.pixelSize: 40
-            Layout.columnSpan: 2
+            id: minute
+            Layout.alignment: Qt.AlignRight
+            font.pixelSize: 300
             wrapMode: Text.WordWrap
+            font.family: "Noto Sans"
+            font.bold: true
+            lineHeight: 0.6
             font.capitalization: Font.AllUppercase
-            text: sessionData.date_string
-            color: "gray"
+            text: parseInt(sessionData.time_string.split(":")[1])
+            color: "#22A7F0"
         }
     }
 }
