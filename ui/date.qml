@@ -7,53 +7,59 @@ import Mycroft 1.0 as Mycroft
 
 Mycroft.Delegate {
     skillBackgroundSource: Qt.resolvedUrl('bg.png')
-    Column {
-        id: column
-        width: parent.width
-        height: parent.height
-        spacing: Kirigami.Units.smallSpacing
-        
-        Item {
-            height: Kirigami.Units.largeSpacing * 10
-        }
-        
+    ColumnLayout {
+        id: grid
+        Layout.fillWidth: true
+        anchors.centerIn: parent
         Label {
             id: weekday
-            font.family: "Noto Sans"
+            Layout.alignment: Qt.AlignHCenter
+            font.pixelSize: 40
+            wrapMode: Text.WordWrap
+            font.family: "Noto Sans Display"
             font.bold: false
-            width: parent.width
-            height: 100
-            fontSizeMode: Text.HorizontalFit
-            font.pixelSize: 300
-            minimumPixelSize: 10
-            color: "white"
             font.capitalization: Font.AllUppercase
             text: sessionData.weekday_string
+            color: "white"
+        } 
+        Item {
+            height: Kirigami.Units.largeSpacing * 2
         }
-        Label {
-            id: month
-            width: parent.width
-            height: 120
-            fontSizeMode: Text.HorizontalFit
-            font.family: "Noto Sans"
-            font.pixelSize: 300
-            minimumPixelSize: 10
-            font.capitalization: Font.AllUppercase
-            text: sessionData.month_string
-            color: "#22A7F0"
-        }
-        Label {
-            id: year
-            width: parent.width
-            height: 120
-            fontSizeMode: Text.HorizontalFit
-            font.bold: bold
-            font.family: "Noto Sans"
-            font.pixelSize: 300
-            minimumPixelSize: 10
-            font.capitalization: Font.AllUppercase
-            text: sessionData.year_string
-            color: "lightgrey"
+        Image {
+            id: image
+            source: Qt.resolvedUrl("img/date-bg.svg")
+            
+            Image {
+                id: calendartop
+                x: 0
+                width: parent.width
+                fillMode: Image.PreserveAspectFit
+                anchors.top: parent.bottom
+                anchors.topMargin: -(parent.height + 1)
+                source: Qt.resolvedUrl("img/date-top.svg")
+                Label {
+                    id: month
+                    anchors.centerIn: parent
+                    font.pixelSize: 40
+                    wrapMode: Text.WordWrap
+                    font.family: "Noto Sans Display"
+                    font.bold: true
+                    text: sessionData.month_string.split(" ")[0]
+                    color: "white"
+                }
+            }
+            Label {
+                id: date
+                anchors.centerIn: parent
+                anchors.verticalCenterOffset: calendartop.height / 2
+
+                font.pixelSize: 250
+                wrapMode: Text.WordWrap
+                font.family: "Noto Sans Display"
+                font.bold: true
+                text: sessionData.month_string.split(" ")[1]
+                color: "black"
+            }
         }
     }
 }
