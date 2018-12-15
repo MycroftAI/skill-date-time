@@ -10,7 +10,7 @@ Mycroft.Delegate {
     ColumnLayout {
         id: grid
         Layout.fillWidth: true
-        width: parent.width
+        anchors.centerIn: parent
         spacing: 0
         Label {
             id: hour
@@ -23,6 +23,9 @@ Mycroft.Delegate {
             color: "white"
             lineHeight: 0.6
             text: sessionData.time_string.split(":")[0]
+        }
+        Item {
+            height: Kirigami.Units.largeSpacing * 5
         }
         Label {
             id: minute
