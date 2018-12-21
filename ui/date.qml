@@ -16,10 +16,11 @@ Mycroft.Delegate {
             Layout.alignment: Qt.AlignHCenter
             font.pixelSize: 40
             wrapMode: Text.WordWrap
+            renderType: Text.NativeRendering
             font.family: "Noto Sans Display"
-            font.bold: false
-            font.capitalization: Font.AllUppercase
-            text: sessionData.weekday_string
+            font.styleName: "Black"
+            font.capitalization: Font.SmallCaps
+            text: sessionData.weekday_string.toLowerCase()
             color: "white"
         } 
         Item {
@@ -58,7 +59,7 @@ Mycroft.Delegate {
                 font.family: "Noto Sans Display"
                 font.bold: true
                 text: sessionData.month_string.split(" ")[1]
-                color: "black"
+                color: "#2C3E50"
             }
         }
     }
