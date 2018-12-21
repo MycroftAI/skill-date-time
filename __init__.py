@@ -158,6 +158,21 @@ class TimeSkill(MycroftSkill):
                          datetime.timedelta(seconds=60))
         self.schedule_repeating_event(self.update_display, callback_time, 10)
 
+        if 'gui' in dir(self):
+            # Register for handling idle/resting screen
+            msg_type = '{}.{}'.format(self.skill_id, 'idle')
+            self.add_event(msg_type, self.handle_idle)
+
+    def handle_idle(self, message):
+        self.log.info('Activating Time/Date resting page')
+        self.gui['time_string'] = self.get_display_time()
+        self.gui['ampm_string'] = ''
+        self.gui['date_string'] = self.get_display_date()
+        self.gui['weekday_string'] = self.get_weekday()
+        self.gui['month_string'] = self.get_month_date()
+        self.gui['year_string'] = self.get_year()
+        self.gui.show_page('idle.qml')
+
     @property
     def use_24hour(self):
         return self.config_core.get('time_format') == 'full'
@@ -237,7 +252,8 @@ class TimeSkill(MycroftSkill):
     def display(self, display_time):
         """ Display the time. """
         self.display_mark1(display_time)
-        self.display_mark2(display_time)
+        if 'gui' in dir(self):
+            self.display_mark2(display_time)
 
     def display_mark1(self, display_time):
         # Map characters to the display encoding for a Mark 1
@@ -299,9 +315,11 @@ class TimeSkill(MycroftSkill):
         # overwriting the displayed value.
         if self.answering_query:
             return
-        self.gui['time_string'] = self.get_display_time()
-        self.gui['date_string'] = self.get_display_date()
-        self.gui['ampm_string'] = '' # TODO
+
+        if 'gui' in dir(self):
+            self.gui['time_string'] = self.get_display_time()
+            self.gui['date_string'] = self.get_display_date()
+            self.gui['ampm_string'] = '' # TODO
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -388,7 +406,8 @@ class TimeSkill(MycroftSkill):
 
     def show_date(self, location):
         self.show_date_mark1(location)
-        self.show_date_mark2(location)
+        if 'gui' in dir(self):
+            self.show_date_mark2(location)
 
     def show_date_mark1(self, location):
         show = self.get_display_date(location)
