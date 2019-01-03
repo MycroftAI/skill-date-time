@@ -24,7 +24,7 @@ from mycroft.skills.core import MycroftSkill, intent_handler
 # from mycroft.util.format import nice_time
 from mycroft.util.format import pronounce_number
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
-
+from mycroft.messagebus.message import Message
 
 # TODO: This is temporary until nice_time() gets fixed in mycroft-core's
 # next release
@@ -162,6 +162,15 @@ class TimeSkill(MycroftSkill):
             # Register for handling idle/resting screen
             msg_type = '{}.{}'.format(self.skill_id, 'idle')
             self.add_event(msg_type, self.handle_idle)
+            self.add_event('mycroft.mark2.collect_idle',
+                           self.handle_collect_request)
+
+    def handle_collect_request(self, message):
+        self.log.info('Registering idle screen')
+        self.bus.emit(Message('mycroft.mark2.register_idle',
+                              data={'name': 'Time and Date',
+                                    'id': self.skill_id}))
+        self.log.info('Done')
 
     def handle_idle(self, message):
         self.log.info('Activating Time/Date resting page')
