@@ -22,7 +22,7 @@ from adapt.intent import IntentBuilder
 import mycroft.audio
 from mycroft.skills.core import MycroftSkill, intent_handler
 # from mycroft.util.format import nice_time
-from mycroft.util.format import pronounce_number
+from mycroft.util.format import pronounce_number, nice_date
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 
 
@@ -116,26 +116,6 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
                 speak += " AM"
 
         return speak
-
-def nice_date_de(local_date):
-
-    # dates are returned as, for example:
-    # "Samstag, der siebte Juli zweitausendachtzehn"
-    # this returns the years as regular numbers,
-    # not 19 hundred ..., but one thousand nine hundred
-    # which is fine from the year 2000
-
-    de_months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-                 'Juli', 'August', 'September', 'October', 'November',
-                 'Dezember']
-
-    de_weekdays = ['Montag', 'Dienstag', 'Mittwoch',
-                   'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
-
-    return de_weekdays[local_date.weekday()] + ", der " \
-            + pronounce_ordinal_de(local_date.day) + " " \
-            + de_months[local_date.month - 1] \
-            + " " + pronounce_number(local_date.year, lang = "de")
 
 class TimeSkill(MycroftSkill):
 
@@ -335,7 +315,10 @@ class TimeSkill(MycroftSkill):
         if lang_lower.startswith("de"):
             speak = nice_date_de(local_date)
         else:
-            speak = local_date.strftime("%A, %B %-d, %Y")
+            # use nce_date instead
+            # speak = local_date.strftime("%A, %B %-d, %Y")
+            speak = nice_date(local_date, lang=self.lang)
+
         if self.config_core.get('date_format') == 'MDY':
             show = local_date.strftime("%-m/%-d/%Y")
         else:
