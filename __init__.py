@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import datetime
-import tzlocal
 from astral import Astral
 from pytz import timezone
 import time
@@ -21,101 +20,8 @@ import time
 from adapt.intent import IntentBuilder
 import mycroft.audio
 from mycroft.skills.core import MycroftSkill, intent_handler
-# from mycroft.util.format import nice_time
-from mycroft.util.format import pronounce_number, nice_date
-from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
+from mycroft.util.format import nice_time, nice_date
 
-
-# TODO: This is temporary until nice_time() gets fixed in mycroft-core's
-# next release
-def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
-    """
-    Format a time to a comfortable human format
-
-    For example, generate 'five thirty' for speech or '5:30' for
-    text display.
-
-    Args:
-        lang (string): ignored
-        dt (datetime): date to format (assumes already in local timezone)
-        speech (bool): format for speech (default/True) or display (False)=Fal
-        use_24hour (bool): output in 24-hour/military or 12-hour format
-        use_ampm (bool): include the am/pm for 12-hour format
-    Returns:
-        (str): The formatted time string
-    """
-
-    # If language is German, use nice_time_de
-    lang_lower = str(lang).lower()
-    if lang_lower.startswith("de"):
-        return nice_time_de(dt, speech, use_24hour, use_ampm)
-
-    if use_24hour:
-        # e.g. "03:01" or "14:22"
-        string = dt.strftime("%H:%M")
-    else:
-        if use_ampm:
-            # e.g. "3:01 AM" or "2:22 PM"
-            string = dt.strftime("%I:%M %p")
-        else:
-            # e.g. "3:01" or "2:22"
-            string = dt.strftime("%I:%M")
-        if string[0] == '0':
-            string = string[1:]  # strip leading zeros
-
-    if not speech:
-        return string
-
-    # Generate a speakable version of the time
-    if use_24hour:
-        speak = ""
-
-        # Either "0 8 hundred" or "13 hundred"
-        if string[0] == '0':
-            speak += pronounce_number(int(string[0]), lang) + " "
-            speak += pronounce_number(int(string[1]), lang)
-        else:
-            speak = pronounce_number(int(string[0:2]), lang)
-
-        speak += " "
-        if string[3:5] == '00':
-            speak += "hundred"
-        else:
-            if string[3] == '0':
-                speak += pronounce_number(0) + " "
-                speak += pronounce_number(int(string[4]), lang)
-            else:
-                speak += pronounce_number(int(string[3:5]), lang)
-        return speak
-    else:
-        if dt.hour == 0 and dt.minute == 0:
-            return "midnight"
-        if dt.hour == 12 and dt.minute == 0:
-            return "noon"
-        # TODO: "half past 3", "a quarter of 4" and other idiomatic times
-
-        if dt.hour == 0:
-            speak = pronounce_number(12, lang)
-        elif dt.hour < 13:
-            speak = pronounce_number(dt.hour, lang)
-        else:
-            speak = pronounce_number(dt.hour - 12, lang)
-
-        if dt.minute == 0:
-            if not use_ampm:
-                return speak + " o'clock"
-        else:
-            if dt.minute < 10:
-                speak += " oh"
-            speak += " " + pronounce_number(dt.minute, lang)
-
-        if use_ampm:
-            if dt.hour > 11:
-                speak += " PM"
-            else:
-                speak += " AM"
-
-        return speak
 
 class TimeSkill(MycroftSkill):
 
@@ -145,11 +51,11 @@ class TimeSkill(MycroftSkill):
         try:
             # This handles common city names, like "Dallas" or "Paris"
             return timezone(self.astral[locale].timezone)
-        except:
+        except Exception:
             try:
                 # This handles codes like "America/Los_Angeles"
                 return timezone(locale)
-            except:
+            except Exception:
                 return None
 
     def get_local_datetime(self, location):
@@ -312,12 +218,9 @@ class TimeSkill(MycroftSkill):
         # otherwise use locale
 
         lang_lower = str(self.lang).lower()
-        if lang_lower.startswith("de"):
-            speak = nice_date_de(local_date)
-        else:
-            # use nce_date instead
-            # speak = local_date.strftime("%A, %B %-d, %Y")
-            speak = nice_date(local_date, lang=self.lang)
+        # use nce_date instead
+        # speak = local_date.strftime("%A, %B %-d, %Y")
+        speak = nice_date(local_date, lang=self.lang)
 
         if self.config_core.get('date_format') == 'MDY':
             show = local_date.strftime("%-m/%-d/%Y")
