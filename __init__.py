@@ -24,6 +24,7 @@ from mycroft.skills.core import MycroftSkill, intent_handler
 # from mycroft.util.format import nice_time
 from mycroft.util.format import pronounce_number
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
+from mycroft.messagebus.message import Message
 
 
 # TODO: This is temporary until nice_time() gets fixed in mycroft-core's
@@ -223,7 +224,6 @@ class TimeSkill(MycroftSkill):
             '9': 'EIMBEBMHAA',
         }
 
-
         # clear screen (draw two blank sections, numbers cover rest)
         if len(display_time) == 4:
             # for 4-character times, 9x8 blank
@@ -248,6 +248,16 @@ class TimeSkill(MycroftSkill):
                     xoffset += 2  # colon is 1 pixels + a space
                 else:
                     xoffset += 4  # digits are 3 pixels + a space
+
+        if self._is_alarm_set():
+            # Show a dot in the upper-left
+            self.enclosure.mouth_display(img_code="CIAACA", x=1, refresh=False)
+        else:
+            self.enclosure.mouth_display(img_code="CIAAAA", x=1, refresh=False)
+
+    def _is_alarm_set(self):
+        msg = self.bus.wait_for_response(Message("private.mycroftai.has_alarm"))
+        return msg and msg.data.get("active_alarms", 0) > 0
 
     def _is_display_idle(self):
         # check if the display is being used by another skill right now
