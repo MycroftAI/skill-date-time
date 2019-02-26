@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import datetime
-import tzlocal
+# import tzlocal
 from astral import Astral
 from pytz import timezone
+from geopy.geocoders import Nomimatim
+from timezonefinder import TimezoneFinder as Tf
 import time
 
 from adapt.intent import IntentBuilder
@@ -142,6 +144,8 @@ class TimeSkill(MycroftSkill):
     def __init__(self):
         super(TimeSkill, self).__init__("TimeSkill")
         self.astral = Astral()
+        self.coordinates = Nominatim()
+        self.tzfinder = Tf()
         self.displayed_time = None
         self.display_tz = None
         self.answering_query = False
@@ -163,13 +167,19 @@ class TimeSkill(MycroftSkill):
 
     def get_timezone(self, locale):
         try:
-            # This handles common city names, like "Dallas" or "Paris"
-            return timezone(self.astral[locale].timezone)
+            coord = self.coordinates.geocode(locale).raw
+            time_zone = self.tzfinder.timezone_at(lng=float(coord.get('lon')), lat=float(coord.get('lat')))
+            return timezone(time_zone)
         except:
             try:
-                # This handles codes like "America/Los_Angeles"
-                return timezone(locale)
-            except:
+                # Fallback Attempt using astral
+                return timezone(self.astral[locale].timezone)
+            except Exception as e:
+                # try:
+                #     # This handles codes like "America/Los_Angeles"
+                #     return timezone(locale)
+                # except Exception as e:
+                LOG.error(e)
                 return None
 
     def get_local_datetime(self, location):
