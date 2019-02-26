@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import datetime
-import tzlocal
+# import tzlocal
 from astral import Astral
 from pytz import timezone
+from geopy.geocoders import Nominatim
+from timezonefinder import TimezoneFinder as Tf
 import time
 
 from adapt.intent import IntentBuilder
@@ -23,11 +25,11 @@ import mycroft.audio
 from mycroft.skills.core import MycroftSkill, intent_handler
 # from mycroft.util.format import nice_time
 from mycroft.util.format import pronounce_number
+from mycroft.util.log import LOG
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 
 
-# TODO: This is temporary until nice_time() gets fixed in mycroft-core's
-# next release
+# TODO: This is temporary until nice_time() gets fixed in mycroft-core's next release
 def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
     """
     Format a time to a comfortable human format
@@ -117,6 +119,7 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
 
         return speak
 
+
 def nice_date_de(local_date):
 
     # dates are returned as, for example:
@@ -137,11 +140,14 @@ def nice_date_de(local_date):
             + de_months[local_date.month - 1] \
             + " " + pronounce_number(local_date.year, lang = "de")
 
+
 class TimeSkill(MycroftSkill):
 
     def __init__(self):
         super(TimeSkill, self).__init__("TimeSkill")
         self.astral = Astral()
+        self.coordinates = Nominatim()
+        self.tzfinder = Tf()
         self.displayed_time = None
         self.display_tz = None
         self.answering_query = False
@@ -163,18 +169,25 @@ class TimeSkill(MycroftSkill):
 
     def get_timezone(self, locale):
         try:
-            # This handles common city names, like "Dallas" or "Paris"
+            coord = self.coordinates.geocode(locale).raw
+            time_zone = self.tzfinder.timezone_at(lng=float(coord.get('lon')), lat=float(coord.get('lat')))
+            return timezone(time_zone)
+        except Exception as e:
+            LOG.error(e)
+        try:
+            # Fallback Attempt using astral
             return timezone(self.astral[locale].timezone)
-        except:
-            try:
-                # This handles codes like "America/Los_Angeles"
-                return timezone(locale)
-            except:
-                return None
+        except Exception as e:
+            LOG.error(e)
+        try:
+            # This handles codes like "America/Los_Angeles"
+            return timezone(locale)
+        except Exception as e:
+            LOG.error(e)
+            return None
 
     def get_local_datetime(self, location):
         nowUTC = datetime.datetime.now(timezone('UTC'))
-
         if self.display_tz:
             tz = self.display_tz
         else:
@@ -223,7 +236,6 @@ class TimeSkill(MycroftSkill):
             '9': 'EIMBEBMHAA',
         }
 
-
         # clear screen (draw two blank sections, numbers cover rest)
         if len(display_time) == 4:
             # for 4-character times, 9x8 blank
@@ -242,8 +254,8 @@ class TimeSkill(MycroftSkill):
         xoffset = (32 - (4*(len(display_time))-2)) / 2
         for c in display_time:
             if c in code_dict:
-                self.enclosure.mouth_display(img_code=code_dict[c],
-                                             x=xoffset, refresh=False)
+                # self.enclosure.mouth_display(img_code=code_dict[c],
+                #                              x=xoffset, refresh=False)
                 if c == ":":
                     xoffset += 2  # colon is 1 pixels + a space
                 else:
