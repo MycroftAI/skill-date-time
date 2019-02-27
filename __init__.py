@@ -18,6 +18,7 @@ import pytz
 import time
 import tzlocal
 from astral import Astral
+import holidays
 
 from adapt.intent import IntentBuilder
 import mycroft.audio
@@ -26,7 +27,7 @@ from mycroft.util.format import pronounce_number, nice_date
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler, intent_file_handler
-from mycroft.util.parse import extract_datetime, fuzzy_match
+from mycroft.util.parse import extract_datetime, fuzzy_match, extract_number
 from mycroft.util.time import now_utc, default_timezone
 
 # TODO:
@@ -126,7 +127,6 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
         return speak
 
 def nice_date_de(local_date):
-
     # dates are returned as, for example:
     # "Samstag, der siebte Juli zweitausendachtzehn"
     # this returns the years as regular numbers,
@@ -186,8 +186,11 @@ class TimeSkill(MycroftSkill):
         # Check lookup table for other timezones.  This can also
         # be a translation layer.
         # E.g. "china = GMT+8"
-        #
-        # TODO: timezone.lookup.value
+        timezones = self.translate_namedvalues("timezone.value")
+        for timezone in timezones:
+            if locale.lower() == timezone.lower():
+                # assumes translation is correct
+                return pytz.timezone(timezones[timezone].strip())
 
         # Now we gotta get a little fuzzy
         # Look at the pytz list of all timezones. It consists of
@@ -258,6 +261,9 @@ class TimeSkill(MycroftSkill):
         return s
 
     def display(self, display_time):
+        if not display_time:
+            return
+
         # Map characters to the display encoding for a Mark 1
         # (4x8 except colon, which is 2x8)
         code_dict = {
@@ -347,8 +353,8 @@ class TimeSkill(MycroftSkill):
         self.handle_query_time(message)
 
     def _extract_location(self, message):
-        if "Location" in message.data:
-            return message.data["Location"]
+        # if "Location" in message.data:
+        #     return message.data["Location"]
 
         utt = message.data.get('utterance') or ""
         rx_file = self.find_resource('location.rx', 'regex')
@@ -412,8 +418,27 @@ class TimeSkill(MycroftSkill):
     @intent_handler(IntentBuilder("").require("Query").require("Date").
                     optionally("Location"))
     def handle_query_date(self, message):
-        utt = message.data.get('utterance') or ""
-        day = extract_datetime(utt)[0]
+        utt = message.data.get('utterance').lower() or ""
+        extract = extract_datetime(utt)
+
+        day = extract[0]
+        # check if a Holiday was requested
+        year = extract_number(utt)
+        if not year or year < 1500 or year > 3000:  # filter out non-years
+            year = day.year
+        all = {}
+        # TODO: How to pick a location for holidays?
+        for st in holidays.US.STATES:
+            l = holidays.US(years=[year], state=st)
+            for d, name in l.items():
+                if not name in all:
+                    all[name] = d
+        for name in all:
+            d = all[name]
+            # self.log.info("Day, name: " +str(d) + " " + str(name))
+            if name.replace(" Day", "").lower() in utt:
+                day = d
+                break
 
         location = self._extract_location(message)
         if location:
