@@ -15,6 +15,7 @@ the [Skill Setting](https://home.mycroft.ai/#/skill).
 * "Show me the time"
 * "What's the date?"
 * "Tell me the day of the week"
+* "What day is Memorial Day 2020?"
 
 ## Credits 
 Mycroft AI (@MycroftAI)
