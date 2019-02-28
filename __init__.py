@@ -13,18 +13,22 @@
 # limitations under the License.
 
 import datetime
+import re
+import pytz
+import time
 import tzlocal
 from astral import Astral
-from pytz import timezone
-import time
+import holidays
 
 from adapt.intent import IntentBuilder
 import mycroft.audio
-from mycroft.skills.core import MycroftSkill, intent_handler
 # from mycroft.util.format import nice_time
-from mycroft.util.format import pronounce_number
+from mycroft.util.format import pronounce_number, nice_date
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 from mycroft.messagebus.message import Message
+from mycroft import MycroftSkill, intent_handler, intent_file_handler
+from mycroft.util.parse import extract_datetime, fuzzy_match, extract_number
+from mycroft.util.time import now_utc, default_timezone
 
 # TODO: This is temporary until nice_time() gets fixed in mycroft-core's
 # next release
@@ -46,8 +50,7 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
     """
 
     # If language is German, use nice_time_de
-    lang_lower = str(lang).lower()
-    if lang_lower.startswith("de"):
+    if lang.lower().startswith("de"):
         return nice_time_de(dt, speech, use_24hour, use_ampm)
 
     if use_24hour:
@@ -118,7 +121,6 @@ def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
         return speak
 
 def nice_date_de(local_date):
-
     # dates are returned as, for example:
     # "Samstag, der siebte Juli zweitausendachtzehn"
     # this returns the years as regular numbers,
@@ -186,35 +188,64 @@ class TimeSkill(MycroftSkill):
         return self.config_core.get('time_format') == 'full'
 
     def get_timezone(self, locale):
+        self.log.debug("GET_TIMEZONE: "+str(locale))
         try:
             # This handles common city names, like "Dallas" or "Paris"
-            return timezone(self.astral[locale].timezone)
+            return pytz.timezone(self.astral[locale].timezone)
         except:
-            try:
-                # This handles codes like "America/Los_Angeles"
-                return timezone(locale)
-            except:
-                return None
+            pass
 
-    def get_weekday(self, location=None):
-        local_date = self.get_local_datetime(location)
-        return local_date.strftime("%A")
+        try:
+            # This handles codes like "America/Los_Angeles"
+            return pytz.timezone(locale)
+        except:
+            pass
 
-    def get_month_date(self, location=None):
-        local_date = self.get_local_datetime(location)
-        return local_date.strftime("%B %d")
+        # Check lookup table for other timezones.  This can also
+        # be a translation layer.
+        # E.g. "china = GMT+8"
+        timezones = self.translate_namedvalues("timezone.value")
+        for timezone in timezones:
+            if locale.lower() == timezone.lower():
+                # assumes translation is correct
+                return pytz.timezone(timezones[timezone].strip())
 
-    def get_year(self, location=None):
-        local_date = self.get_local_datetime(location)
-        return local_date.strftime("%Y")
+        # Now we gotta get a little fuzzy
+        # Look at the pytz list of all timezones. It consists of
+        # Location/Name pairs.  For example:
+        # ["Africa/Abidjan", "Africa/Accra", ... "America/Denver", ...
+        #  "America/New_York", ..., "America/North_Dakota/Center", ...
+        #  "Cuba", ..., "EST", ..., "Egypt", ..., "Etc/GMT+3", ...
+        #  "Etc/Zulu", ... "US/Eastern", ... "UTC", ..., "Zulu"]
+        target = locale.lower()
+        best = None
+        for name in pytz.all_timezones:
+            normalized = name.lower().replace("_", " ").split("/")
+            if len(normalized) == 1:
+                pct = fuzzy_match(normalized[0], target)
+            elif len(normalized) == 2:
+                pct = fuzzy_match(normalized[1], target)
+                # TODO: if pct <
+            if not best or pct >= best[0]:
+                best = (pct, name)
+        if best and best[0] > 0.8:
+           # solid choice
+           return pytz.timezone(best[1])
+        if best and best[0] > 0.3:
+            if self.ask_yesno("did you mean "+ best[1]) == "yes":
+                return pytz.timezone(best[1])
 
-    def get_local_datetime(self, location):
-        nowUTC = datetime.datetime.now(timezone('UTC'))
+        return None
 
+    def get_local_datetime(self, location, dtUTC=None):
+        if not dtUTC:
+            dtUTC = now_utc()
         if self.display_tz:
+            # User requested times be shown in some timezone
             tz = self.display_tz
         else:
-            tz = self.get_timezone(self.location_timezone)
+            # Use default timezone
+            tz = default_timezone()
 
         if location:
             tz = self.get_timezone(location)
@@ -222,24 +253,9 @@ class TimeSkill(MycroftSkill):
             self.speak_dialog("time.tz.not.found", {"location": location})
             return None
 
-        return nowUTC.astimezone(tz)
+        return dtUTC.astimezone(tz)
 
-    def get_spoken_date(self, location=None):
-        local_date = self.get_local_datetime(location)
-        lang_lower = str(self.lang).lower()
-        if lang_lower.startswith("de"):
-            return nice_date_de(local_date)
-        else:
-            return local_date.strftime("%A, %B %-d, %Y")
-
-    def get_display_date(self, location=None):
-        local_date = self.get_local_datetime(location)
-        if self.config_core.get('date_format') == 'MDY':
-            return local_date.strftime("%-m/%-d/%Y")
-        else:
-            return local_date.strftime("%Y/%-d/%-m")
-
-    def get_display_time(self, location=None):
+    def get_display_current_time(self, location=None):
         # Get a formatted digital clock time based on the user preferences
         dt = self.get_local_datetime(location)
         if not dt:
@@ -248,21 +264,24 @@ class TimeSkill(MycroftSkill):
         return nice_time(dt, self.lang, speech=False,
                          use_24hour=self.use_24hour)
 
-    def get_spoken_time(self, location=None):
+    def get_spoken_current_time(self, location=None):
         # Get a formatted spoken time based on the user preferences
         dt = self.get_local_datetime(location)
         if not dt:
             return
 
-        return nice_time(dt, self.lang, speech=True,
-                         use_24hour=self.use_24hour)
+        say_am_pm = bool(location)  # speak AM/PM when talking about somewhere else
+        s = nice_time(dt, self.lang, speech=True,
+                      use_24hour=self.use_24hour, use_ampm=say_am_pm)
+        # HACK: Mimic 2 has a bug with saying "AM".  Work around it for now.
+        if say_am_pm:
+            s = s.replace("AM", "A.M.")
+        return s
 
     def display(self, display_time):
-        """ Display the time. """
-        self.display_mark1(display_time)
-        self.display_mark2(display_time)
+        if not display_time:
+            return
 
-    def display_mark1(self, display_time):
         # Map characters to the display encoding for a Mark 1
         # (4x8 except colon, which is 2x8)
         code_dict = {
@@ -278,7 +297,6 @@ class TimeSkill(MycroftSkill):
             '8': 'EIMHEFMHAA',
             '9': 'EIMBEBMHAA',
         }
-
 
         # clear screen (draw two blank sections, numbers cover rest)
         if len(display_time) == 4:
@@ -305,6 +323,16 @@ class TimeSkill(MycroftSkill):
                 else:
                     xoffset += 4  # digits are 3 pixels + a space
 
+        if self._is_alarm_set():
+            # Show a dot in the upper-left
+            self.enclosure.mouth_display(img_code="CIAACA", x=1, refresh=False)
+        else:
+            self.enclosure.mouth_display(img_code="CIAAAA", x=1, refresh=False)
+
+    def _is_alarm_set(self):
+        msg = self.bus.wait_for_response(Message("private.mycroftai.has_alarm"))
+        return msg and msg.data.get("active_alarms", 0) > 0
+
     def display_mark2(self, display_time):
         """ Display time on the Mark-2. """
         self.gui['time_string'] = display_time
@@ -330,7 +358,7 @@ class TimeSkill(MycroftSkill):
         if self.settings.get("show_time", False):
             # user requested display of time while idle
             if (force is True) or self._is_display_idle():
-                current_time = self.get_display_time()
+                current_time = self.get_display_current_time()
                 if self.displayed_time != current_time:
                     self.displayed_time = current_time
                     self.display(current_time)
@@ -348,11 +376,37 @@ class TimeSkill(MycroftSkill):
                     self.enclosure.display_manager.remove_active()
                 self.displayed_time = None
 
+    @intent_file_handler("what.time.is.it.intent")
+    def handle_query_time_alt(self, message):
+        self.log.info("FORWARDING PADATIOUS INTENT MATCH ")
+        self.handle_query_time(message)
+
+    def _extract_location(self, message):
+        # if "Location" in message.data:
+        #     return message.data["Location"]
+
+        utt = message.data.get('utterance') or ""
+        rx_file = self.find_resource('location.rx', 'regex')
+        if rx_file:
+            with open(rx_file) as f:
+                for pat in f.read().splitlines():
+                    pat = pat.strip()
+                    if pat and pat[0] == "#":
+                        continue
+                    res = re.search(pat, utt)
+                    if res:
+                        try:
+                            return res.group("Location")
+                        except IndexError:
+                            pass
+        return None
+
     @intent_handler(IntentBuilder("").require("Query").require("Time").
                     optionally("Location"))
     def handle_query_time(self, message):
-        location = message.data.get("Location")
-        current_time = self.get_spoken_time(location)
+        location = self._extract_location(message)
+        self.log.info("LOCATION: "+str(location))
+        current_time = self.get_spoken_current_time(location)
         if not current_time:
             return
 
@@ -362,7 +416,7 @@ class TimeSkill(MycroftSkill):
         # and briefly show the time
         self.answering_query = True
         self.enclosure.deactivate_mouth_events()
-        self.display(self.get_display_time(location))
+        self.display(self.get_display_current_time(location))
         time.sleep(5)
         mycroft.audio.wait_while_speaking()
         self.enclosure.mouth_reset()
@@ -374,7 +428,8 @@ class TimeSkill(MycroftSkill):
                     optionally("Location"))
     def handle_show_time(self, message):
         self.display_tz = None
-        location = message.data.get("Location")
+        location = self._get_location(message)
+        self.log.info("Location: "+str(location))
         if location:
             tz = self.get_timezone(location)
             if not tz:
@@ -382,6 +437,8 @@ class TimeSkill(MycroftSkill):
                 return
             else:
                 self.display_tz = tz
+        else:
+            self.display_tz = None
 
         # show time immediately
         self.settings["show_time"] = True
@@ -390,13 +447,44 @@ class TimeSkill(MycroftSkill):
     @intent_handler(IntentBuilder("").require("Query").require("Date").
                     optionally("Location"))
     def handle_query_date(self, message):
-        location = message.data.get("Location")
+        utt = message.data.get('utterance').lower() or ""
+        extract = extract_datetime(utt)
 
-        # Get the current date
-        # If language is German, use nice_date_de
-        # otherwise use locale
+        day = extract[0]
+        # check if a Holiday was requested
+        year = extract_number(utt)
+        if not year or year < 1500 or year > 3000:  # filter out non-years
+            year = day.year
+        all = {}
+        # TODO: How to pick a location for holidays?
+        for st in holidays.US.STATES:
+            l = holidays.US(years=[year], state=st)
+            for d, name in l.items():
+                if not name in all:
+                    all[name] = d
+        for name in all:
+            d = all[name]
+            # self.log.info("Day, name: " +str(d) + " " + str(name))
+            if name.replace(" Day", "").lower() in utt:
+                day = d
+                break
 
-        speak = self.get_spoken_date(location)
+        location = self._extract_location(message)
+        if location:
+            # TODO: Timezone math!
+            day = self.get_local_datetime(location, dtUTC=day)
+
+        self.log.info("Day:  "+str(day))
+        if self.lang.lower().startswith("de"):
+            speak = nice_date_de(day)
+        else:
+            speak = nice_date(day)
+
+        if self.config_core.get('date_format') == 'MDY':
+            show = day.strftime("%-m/%-d/%Y")
+        else:
+            show = day.strftime("%Y/%-d/%-m")
+
         # speak it
         self.speak_dialog("date", {"date": speak})
 
