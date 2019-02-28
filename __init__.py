@@ -23,12 +23,12 @@ import holidays
 from adapt.intent import IntentBuilder
 import mycroft.audio
 # from mycroft.util.format import nice_time
-from mycroft.util.format import pronounce_number, nice_date
+from mycroft.util.format import pronounce_number, nice_date, nice_time
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler, intent_file_handler
 from mycroft.util.parse import extract_datetime, fuzzy_match, extract_number
-from mycroft.util.time import now_utc, default_timezone
+from mycroft.util.time import now_utc, default_timezone, to_local
 
 
 class TimeSkill(MycroftSkill):
@@ -153,7 +153,7 @@ class TimeSkill(MycroftSkill):
         return dtUTC.astimezone(tz)
 
     def get_display_date(self, day=None, location=None):
-		if not day:
+        if not day:
 	        day = self.get_local_datetime(location)
         if self.config_core.get('date_format') == 'MDY':
             return day.strftime("%-m/%-d/%Y")
@@ -184,7 +184,7 @@ class TimeSkill(MycroftSkill):
         return s
 
     def display(self, display_time):
-		if display_time:
+        if display_time:
 	        self.display_mark1(display_time)
 	        self.display_mark2(display_time)
 
@@ -258,7 +258,7 @@ class TimeSkill(MycroftSkill):
         if self.answering_query:
             return
 
-        self.gui['time_string'] = self.get_display_time()
+        self.gui['time_string'] = self.get_display_current_time()
         self.gui['date_string'] = self.get_display_date()
         self.gui['ampm_string'] = '' # TODO
 
@@ -390,7 +390,7 @@ class TimeSkill(MycroftSkill):
 
         # and briefly show the date
         self.answering_query = True
-        self.show_date(location, day=date)
+        self.show_date(location, day=day)
         time.sleep(10)
         mycroft.audio.wait_while_speaking()
         self.enclosure.mouth_reset()
@@ -403,15 +403,30 @@ class TimeSkill(MycroftSkill):
         self.show_date_mark2(location, day)
 
     def show_date_mark1(self, location, day):
-        show = self.get_display_date(location, day=day)
+        show = self.get_display_date(day, location)
         self.enclosure.deactivate_mouth_events()
         self.enclosure.mouth_text(show)
 
+    def get_weekday(self, day, location=None):
+        if not day:
+            day = self.get_local_datetime(location)
+        return day.strftime("%A")
+
+    def get_month_date(self, day, location=None):
+        if not day:
+            day = self.get_local_datetime(location)
+        return day.strftime("%B %d")
+
+    def get_year(self, day, location=None):
+        if not day:
+            day = self.get_local_datetime(location)
+        return day.strftime("%Y")
+
     def show_date_mark2(self, location, day):
-        self.gui['date_string'] = self.get_display_date(location, day=day)
-        self.gui['weekday_string'] = self.get_weekday(location, day=day)
-        self.gui['month_string'] = self.get_month_date(location, day=day)
-        self.gui['year_string'] = self.get_year(location, day=day)
+        self.gui['date_string'] = self.get_display_date(day, location)
+        self.gui['weekday_string'] = self.get_weekday(day, location)
+        self.gui['month_string'] = self.get_month_date(day, location)
+        self.gui['year_string'] = self.get_year(day, location)
         self.gui.show_page('date.qml')
 
 
