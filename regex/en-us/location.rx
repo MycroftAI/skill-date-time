@@ -1,1 +1,1 @@
-\b(at|in|for) (?P<Location>.*)
+(at|in|for) (?P<Location>.*)
