@@ -160,35 +160,12 @@ class TimeSkill(MycroftSkill):
                          datetime.timedelta(seconds=60))
         self.schedule_repeating_event(self.update_display, callback_time, 10)
 
-        # Register for handling idle/resting screen
-        msg_type = '{}.{}'.format(self.skill_id, 'idle')
-        self.add_event(msg_type, self.handle_idle)
-        self.add_event('mycroft.mark2.collect_idle',
-                       self.handle_collect_request)
-
-    def handle_collect_request(self, message):
-        self.log.info('Registering idle screen')
-        self.bus.emit(Message('mycroft.mark2.register_idle',
-                              data={'name': 'Time and Date',
-                                    'id': self.skill_id}))
-        self.log.info('Done')
-
-    def handle_idle(self, message):
-        self.log.info('Activating Time/Date resting page')
-        self.gui['time_string'] = self.get_display_time()
-        self.gui['ampm_string'] = ''
-        self.gui['date_string'] = self.get_display_date()
-        self.gui['weekday_string'] = self.get_weekday()
-        self.gui['month_string'] = self.get_month_date()
-        self.gui['year_string'] = self.get_year()
-        self.gui.show_page('idle.qml')
 
     @property
     def use_24hour(self):
         return self.config_core.get('time_format') == 'full'
 
     def get_timezone(self, locale):
-        self.log.debug("GET_TIMEZONE: "+str(locale))
         try:
             # This handles common city names, like "Dallas" or "Paris"
             return pytz.timezone(self.astral[locale].timezone)
@@ -220,19 +197,27 @@ class TimeSkill(MycroftSkill):
         target = locale.lower()
         best = None
         for name in pytz.all_timezones:
-            normalized = name.lower().replace("_", " ").split("/")
+            normalized = name.lower().replace("_", " ").split("/") # E.g. "Australia/Sydney"
             if len(normalized) == 1:
                 pct = fuzzy_match(normalized[0], target)
-            elif len(normalized) == 2:
-                pct = fuzzy_match(normalized[1], target)
-                # TODO: if pct <
+            elif len(normalized) >= 2:
+                pct = fuzzy_match(normalized[1], target)                           # e.g. "Sydney"
+                pct2 = fuzzy_match(normalized[-2] + " " + normalized[-1], target)  # e.g. "Sydney Australia" or "Center North Dakota"
+                pct3 = fuzzy_match(normalized[-1] + " " + normalized[-2], target)  # e.g. "Australia Sydney"
+                pct = max(pct, pct2, pct3)
             if not best or pct >= best[0]:
                 best = (pct, name)
         if best and best[0] > 0.8:
            # solid choice
            return pytz.timezone(best[1])
         if best and best[0] > 0.3:
-            if self.ask_yesno("did you mean "+ best[1]) == "yes":
+            # Convert to a better speakable version
+            say = re.sub("([a-z])([A-Z])","\g<1> \g<2>", best[1])  # e.g. EasterIsland  to "Easter Island"
+            say = say.replace("_", " ")  # e.g. "North_Dakota" to "North Dakota"
+            say = say.split("/")  # e.g. "America/North Dakota/Center" to ["America", "North Dakota", "Center"]
+            say.reverse()
+            say = " ".join(say)   # e.g.  "Center North Dakota America", or "Easter Island Chile"
+            if self.ask_yesno("did.you.mean.timezone", data={"zone_name": say}) == "yes":
                 return pytz.timezone(best[1])
 
         return None
@@ -333,13 +318,6 @@ class TimeSkill(MycroftSkill):
         msg = self.bus.wait_for_response(Message("private.mycroftai.has_alarm"))
         return msg and msg.data.get("active_alarms", 0) > 0
 
-    def display_mark2(self, display_time):
-        """ Display time on the Mark-2. """
-        self.gui['time_string'] = display_time
-        self.gui['ampm_string'] = ''
-        self.gui['date_string'] = self.get_display_date()
-        self.gui.show_page('time.qml')
-
     def _is_display_idle(self):
         # check if the display is being used by another skill right now
         # or _get_active() == "TimeSkill"
@@ -350,10 +328,6 @@ class TimeSkill(MycroftSkill):
         # overwriting the displayed value.
         if self.answering_query:
             return
-
-        self.gui['time_string'] = self.get_display_time()
-        self.gui['date_string'] = self.get_display_date()
-        self.gui['ampm_string'] = '' # TODO
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -378,7 +352,6 @@ class TimeSkill(MycroftSkill):
 
     @intent_file_handler("what.time.is.it.intent")
     def handle_query_time_alt(self, message):
-        self.log.info("FORWARDING PADATIOUS INTENT MATCH ")
         self.handle_query_time(message)
 
     def _extract_location(self, message):
@@ -405,7 +378,6 @@ class TimeSkill(MycroftSkill):
                     optionally("Location"))
     def handle_query_time(self, message):
         location = self._extract_location(message)
-        self.log.info("LOCATION: "+str(location))
         current_time = self.get_spoken_current_time(location)
         if not current_time:
             return
@@ -429,7 +401,6 @@ class TimeSkill(MycroftSkill):
     def handle_show_time(self, message):
         self.display_tz = None
         location = self._get_location(message)
-        self.log.info("Location: "+str(location))
         if location:
             tz = self.get_timezone(location)
             if not tz:
@@ -449,9 +420,9 @@ class TimeSkill(MycroftSkill):
     def handle_query_date(self, message):
         utt = message.data.get('utterance').lower() or ""
         extract = extract_datetime(utt)
-
         day = extract[0]
-        # check if a Holiday was requested
+
+        # check if a Holiday was requested, e.g. "What day is Christmas?"
         year = extract_number(utt)
         if not year or year < 1500 or year > 3000:  # filter out non-years
             year = day.year
@@ -464,6 +435,7 @@ class TimeSkill(MycroftSkill):
                     all[name] = d
         for name in all:
             d = all[name]
+            # Uncomment to display all holidays in the database
             # self.log.info("Day, name: " +str(d) + " " + str(name))
             if name.replace(" Day", "").lower() in utt:
                 day = d
@@ -472,9 +444,13 @@ class TimeSkill(MycroftSkill):
         location = self._extract_location(message)
         if location:
             # TODO: Timezone math!
+            today = to_local(now_utc())
+            if day.year == today.year and day.month == today.month and day.day == today.day:
+                day = now_utc()  # for questions like "what is the day in sydney"
             day = self.get_local_datetime(location, dtUTC=day)
+        if not day:
+            return  # failed in timezone lookup
 
-        self.log.info("Day:  "+str(day))
         if self.lang.lower().startswith("de"):
             speak = nice_date_de(day)
         else:
@@ -490,29 +466,14 @@ class TimeSkill(MycroftSkill):
 
         # and briefly show the date
         self.answering_query = True
-        self.show_date(location)
+        self.enclosure.deactivate_mouth_events()
+        self.enclosure.mouth_text(show)
         time.sleep(10)
         mycroft.audio.wait_while_speaking()
         self.enclosure.mouth_reset()
         self.enclosure.activate_mouth_events()
         self.answering_query = False
         self.displayed_time = None
-
-    def show_date(self, location):
-        self.show_date_mark1(location)
-        self.show_date_mark2(location)
-
-    def show_date_mark1(self, location):
-        show = self.get_display_date(location)
-        self.enclosure.deactivate_mouth_events()
-        self.enclosure.mouth_text(show)
-
-    def show_date_mark2(self, location):
-        self.gui['date_string'] = self.get_display_date(location)
-        self.gui['weekday_string'] = self.get_weekday(location)
-        self.gui['month_string'] = self.get_month_date(location)
-        self.gui['year_string'] = self.get_year(location)
-        self.gui.show_page('date.qml')
 
 
 def create_skill():
