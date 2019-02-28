@@ -30,12 +30,6 @@ from mycroft import MycroftSkill, intent_handler, intent_file_handler
 from mycroft.util.parse import extract_datetime, fuzzy_match, extract_number
 from mycroft.util.time import now_utc, default_timezone
 
-# TODO:
-#   * what time is it in Sydney
-#   * what day is it in Sydney
-#   * what day is july 4th
-#   * what day is Christmas 2020
-
 # TODO: This is temporary until nice_time() gets fixed in mycroft-core's
 # next release
 def nice_time(dt, lang, speech=True, use_24hour=False, use_ampm=False):
@@ -145,6 +139,7 @@ def nice_date_de(local_date):
             + de_months[local_date.month - 1] \
             + " " + pronounce_number(local_date.year, lang = "de")
 
+
 class TimeSkill(MycroftSkill):
 
     def __init__(self):
@@ -164,6 +159,29 @@ class TimeSkill(MycroftSkill):
                                            now.hour, now.minute) +
                          datetime.timedelta(seconds=60))
         self.schedule_repeating_event(self.update_display, callback_time, 10)
+
+        # Register for handling idle/resting screen
+        msg_type = '{}.{}'.format(self.skill_id, 'idle')
+        self.add_event(msg_type, self.handle_idle)
+        self.add_event('mycroft.mark2.collect_idle',
+                       self.handle_collect_request)
+
+    def handle_collect_request(self, message):
+        self.log.info('Registering idle screen')
+        self.bus.emit(Message('mycroft.mark2.register_idle',
+                              data={'name': 'Time and Date',
+                                    'id': self.skill_id}))
+        self.log.info('Done')
+
+    def handle_idle(self, message):
+        self.log.info('Activating Time/Date resting page')
+        self.gui['time_string'] = self.get_display_time()
+        self.gui['ampm_string'] = ''
+        self.gui['date_string'] = self.get_display_date()
+        self.gui['weekday_string'] = self.get_weekday()
+        self.gui['month_string'] = self.get_month_date()
+        self.gui['year_string'] = self.get_year()
+        self.gui.show_page('idle.qml')
 
     @property
     def use_24hour(self):
@@ -315,6 +333,13 @@ class TimeSkill(MycroftSkill):
         msg = self.bus.wait_for_response(Message("private.mycroftai.has_alarm"))
         return msg and msg.data.get("active_alarms", 0) > 0
 
+    def display_mark2(self, display_time):
+        """ Display time on the Mark-2. """
+        self.gui['time_string'] = display_time
+        self.gui['ampm_string'] = ''
+        self.gui['date_string'] = self.get_display_date()
+        self.gui.show_page('time.qml')
+
     def _is_display_idle(self):
         # check if the display is being used by another skill right now
         # or _get_active() == "TimeSkill"
@@ -325,6 +350,10 @@ class TimeSkill(MycroftSkill):
         # overwriting the displayed value.
         if self.answering_query:
             return
+
+        self.gui['time_string'] = self.get_display_time()
+        self.gui['date_string'] = self.get_display_date()
+        self.gui['ampm_string'] = '' # TODO
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -459,16 +488,31 @@ class TimeSkill(MycroftSkill):
         # speak it
         self.speak_dialog("date", {"date": speak})
 
-        # and briefly show the time
+        # and briefly show the date
         self.answering_query = True
-        self.enclosure.deactivate_mouth_events()
-        self.enclosure.mouth_text(show)
+        self.show_date(location)
         time.sleep(10)
         mycroft.audio.wait_while_speaking()
         self.enclosure.mouth_reset()
         self.enclosure.activate_mouth_events()
         self.answering_query = False
         self.displayed_time = None
+
+    def show_date(self, location):
+        self.show_date_mark1(location)
+        self.show_date_mark2(location)
+
+    def show_date_mark1(self, location):
+        show = self.get_display_date(location)
+        self.enclosure.deactivate_mouth_events()
+        self.enclosure.mouth_text(show)
+
+    def show_date_mark2(self, location):
+        self.gui['date_string'] = self.get_display_date(location)
+        self.gui['weekday_string'] = self.get_weekday(location)
+        self.gui['month_string'] = self.get_month_date(location)
+        self.gui['year_string'] = self.get_year(location)
+        self.gui.show_page('date.qml')
 
 
 def create_skill():
