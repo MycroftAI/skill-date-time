@@ -384,7 +384,7 @@ class TimeSkill(MycroftSkill):
         if not day:
             return  # failed in timezone lookup
 
-        speak = nice_date(day)
+        speak = nice_date(day, lang=self.lang)
         # speak it
         self.speak_dialog("date", {"date": speak})
 
