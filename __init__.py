@@ -333,7 +333,7 @@ class TimeSkill(MycroftSkill):
                     optionally("Location"))
     def handle_show_time(self, message):
         self.display_tz = None
-        location = self._get_location(message)
+        location = self._extract_location(message)
         if location:
             tz = self.get_timezone(location)
             if not tz:
