@@ -66,7 +66,7 @@ class TimeSkill(MycroftSkill):
 
     def handle_idle(self, message):
         self.log.info('Activating Time/Date resting page')
-        self.gui['time_string'] = self.get_display_time()
+        self.gui['time_string'] = self.get_display_current_time()
         self.gui['ampm_string'] = ''
         self.gui['date_string'] = self.get_display_date()
         self.gui['weekday_string'] = self.get_weekday()
@@ -407,17 +407,17 @@ class TimeSkill(MycroftSkill):
         self.enclosure.deactivate_mouth_events()
         self.enclosure.mouth_text(show)
 
-    def get_weekday(self, day, location=None):
+    def get_weekday(self, day=None, location=None):
         if not day:
             day = self.get_local_datetime(location)
         return day.strftime("%A")
 
-    def get_month_date(self, day, location=None):
+    def get_month_date(self, day=None, location=None):
         if not day:
             day = self.get_local_datetime(location)
         return day.strftime("%B %d")
 
-    def get_year(self, day, location=None):
+    def get_year(self, day=None, location=None):
         if not day:
             day = self.get_local_datetime(location)
         return day.strftime("%Y")
