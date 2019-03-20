@@ -232,9 +232,9 @@ class TimeSkill(MycroftSkill):
 
         if self._is_alarm_set():
             # Show a dot in the upper-left
-            self.enclosure.mouth_display(img_code="CIAACA", x=1, refresh=False)
+            self.enclosure.mouth_display(img_code="CIAACA", x=29, refresh=False)
         else:
-            self.enclosure.mouth_display(img_code="CIAAAA", x=1, refresh=False)
+            self.enclosure.mouth_display(img_code="CIAAAA", x=29, refresh=False)
 
     def _is_alarm_set(self):
         msg = self.bus.wait_for_response(Message("private.mycroftai.has_alarm"))
