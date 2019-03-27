@@ -27,7 +27,7 @@ from mycroft.util.format import pronounce_number, nice_date, nice_time
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler, intent_file_handler
-from mycroft.util.parse import extract_datetime, fuzzy_match, extract_number
+from mycroft.util.parse import extract_datetime, fuzzy_match, extract_number, normalize
 from mycroft.util.time import now_utc, default_timezone, to_local
 
 
@@ -160,22 +160,24 @@ class TimeSkill(MycroftSkill):
         else:
             return day.strftime("%Y/%-d/%-m")
 
-    def get_display_current_time(self, location=None):
+    def get_display_current_time(self, location=None, dtUTC=None):
         # Get a formatted digital clock time based on the user preferences
-        dt = self.get_local_datetime(location)
+        dt = self.get_local_datetime(location, dtUTC)
         if not dt:
-            return
+            return None
 
         return nice_time(dt, self.lang, speech=False,
                          use_24hour=self.use_24hour)
 
-    def get_spoken_current_time(self, location=None):
+    def get_spoken_current_time(self, location=None, dtUTC=None, force_ampm=False):
         # Get a formatted spoken time based on the user preferences
-        dt = self.get_local_datetime(location)
+        dt = self.get_local_datetime(location, dtUTC)
         if not dt:
             return
 
-        say_am_pm = bool(location)  # speak AM/PM when talking about somewhere else
+        # speak AM/PM when talking about somewhere else
+        say_am_pm = bool(location) or force_ampm
+
         s = nice_time(dt, self.lang, speech=True,
                       use_24hour=self.use_24hour, use_ampm=say_am_pm)
         # HACK: Mimic 2 has a bug with saying "AM".  Work around it for now.
@@ -287,11 +289,9 @@ class TimeSkill(MycroftSkill):
     def handle_query_time_alt(self, message):
         self.handle_query_time(message)
 
-    def _extract_location(self, message):
+    def _extract_location(self, utt):
         # if "Location" in message.data:
         #     return message.data["Location"]
-
-        utt = message.data.get('utterance') or ""
         rx_file = self.find_resource('location.rx', 'regex')
         if rx_file:
             with open(rx_file) as f:
@@ -310,7 +310,8 @@ class TimeSkill(MycroftSkill):
     @intent_handler(IntentBuilder("").require("Query").require("Time").
                     optionally("Location"))
     def handle_query_time(self, message):
-        location = self._extract_location(message)
+        utt = message.data.get('utterance', "")
+        location = self._extract_location(utt)
         current_time = self.get_spoken_current_time(location)
         if not current_time:
             return
@@ -329,11 +330,38 @@ class TimeSkill(MycroftSkill):
         self.answering_query = False
         self.displayed_time = None
 
+    @intent_file_handler("what.time.will.it.be.intent")
+    def handle_query_future_time(self, message):
+        utt = normalize(message.data.get('utterance', "").lower())
+        extract = extract_datetime(utt)
+        if extract:
+            dt = extract[0]
+            utt = extract[1]
+        location = self._extract_location(utt)
+        future_time = self.get_spoken_current_time(location, dt, True)
+        if not future_time:
+            return
+
+        # speak it
+        self.speak_dialog("time.future", {"time": future_time})
+
+        # and briefly show the time
+        self.answering_query = True
+        self.enclosure.deactivate_mouth_events()
+        self.display(self.get_display_current_time(location, dt))
+        time.sleep(5)
+        mycroft.audio.wait_while_speaking()
+        self.enclosure.mouth_reset()
+        self.enclosure.activate_mouth_events()
+        self.answering_query = False
+        self.displayed_time = None
+
     @intent_handler(IntentBuilder("").require("Display").require("Time").
                     optionally("Location"))
     def handle_show_time(self, message):
         self.display_tz = None
-        location = self._extract_location(message)
+        utt = message.data.get('utterance', "")
+        location = self._extract_location(utt)
         if location:
             tz = self.get_timezone(location)
             if not tz:
@@ -351,7 +379,7 @@ class TimeSkill(MycroftSkill):
     @intent_handler(IntentBuilder("").require("Query").require("Date").
                     optionally("Location"))
     def handle_query_date(self, message):
-        utt = message.data.get('utterance').lower() or ""
+        utt = message.data.get('utterance', "").lower()
         extract = extract_datetime(utt)
         day = extract[0]
 
@@ -374,7 +402,7 @@ class TimeSkill(MycroftSkill):
                 day = d
                 break
 
-        location = self._extract_location(message)
+        location = self._extract_location(utt)
         if location:
             # TODO: Timezone math!
             today = to_local(now_utc())
