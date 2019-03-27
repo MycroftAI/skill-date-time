@@ -125,7 +125,7 @@ class TimeSkill(MycroftSkill):
            return pytz.timezone(best[1])
         if best and best[0] > 0.3:
             # Convert to a better speakable version
-            say = re.sub("([a-z])([A-Z])","\g<1> \g<2>", best[1])  # e.g. EasterIsland  to "Easter Island"
+            say = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>", best[1])  # e.g. EasterIsland  to "Easter Island"
             say = say.replace("_", " ")  # e.g. "North_Dakota" to "North Dakota"
             say = say.split("/")  # e.g. "America/North Dakota/Center" to ["America", "North Dakota", "Center"]
             say.reverse()
