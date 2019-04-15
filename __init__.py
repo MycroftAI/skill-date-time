@@ -29,6 +29,7 @@ from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler, intent_file_handler
 from mycroft.util.parse import extract_datetime, fuzzy_match, extract_number, normalize
 from mycroft.util.time import now_utc, default_timezone, to_local
+from mycroft.skills.core import resting_screen_handler
 
 
 class TimeSkill(MycroftSkill):
@@ -51,19 +52,7 @@ class TimeSkill(MycroftSkill):
                          datetime.timedelta(seconds=60))
         self.schedule_repeating_event(self.update_display, callback_time, 10)
 
-        # Register for handling idle/resting screen
-        msg_type = '{}.{}'.format(self.skill_id, 'idle')
-        self.add_event(msg_type, self.handle_idle)
-        self.add_event('mycroft.mark2.collect_idle',
-                       self.handle_collect_request)
-
-    def handle_collect_request(self, message):
-        self.log.info('Registering idle screen')
-        self.bus.emit(Message('mycroft.mark2.register_idle',
-                              data={'name': 'Time and Date',
-                                    'id': self.skill_id}))
-        self.log.info('Done')
-
+    @resting_screen_handler('Time and Date')
     def handle_idle(self, message):
         self.log.info('Activating Time/Date resting page')
         self.gui['time_string'] = self.get_display_current_time()
