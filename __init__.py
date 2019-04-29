@@ -65,6 +65,7 @@ class TimeSkill(MycroftSkill):
         self.log.info('Done')
 
     def handle_idle(self, message):
+        self.gui.clear()
         self.log.info('Activating Time/Date resting page')
         self.gui['time_string'] = self.get_display_current_time()
         self.gui['ampm_string'] = ''
@@ -244,6 +245,7 @@ class TimeSkill(MycroftSkill):
 
     def display_mark2(self, display_time):
         """ Display time on the Mark-2. """
+        self.gui.clear()
         self.gui['time_string'] = display_time
         self.gui['ampm_string'] = ''
         self.gui['date_string'] = self.get_display_date()
@@ -451,6 +453,7 @@ class TimeSkill(MycroftSkill):
         return day.strftime("%Y")
 
     def show_date_mark2(self, location, day):
+        self.gui.clear()
         self.gui['date_string'] = self.get_display_date(day, location)
         self.gui['weekday_string'] = self.get_weekday(day, location)
         self.gui['month_string'] = self.get_month_date(day, location)
