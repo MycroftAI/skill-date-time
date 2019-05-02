@@ -52,6 +52,20 @@ class TimeSkill(MycroftSkill):
                          datetime.timedelta(seconds=60))
         self.schedule_repeating_event(self.update_display, callback_time, 10)
 
+    # TODO:19.08 Moved to MycroftSkill
+    @property
+    def platform(self):
+        """ Get the platform identifier string
+
+        Returns:
+            str: Platform identifier, such as "mycroft_mark_1",
+                 "mycroft_picroft", "mycroft_mark_2".  None for nonstandard.
+        """
+        if self.config_core and self.config_core.get("enclosure"):
+            return self.config_core["enclosure"].get("platform")
+        else:
+            return None
+
     @resting_screen_handler('Time and Date')
     def handle_idle(self, message):
         self.gui.clear()
@@ -144,7 +158,7 @@ class TimeSkill(MycroftSkill):
 
     def get_display_date(self, day=None, location=None):
         if not day:
-	        day = self.get_local_datetime(location)
+            day = self.get_local_datetime(location)
         if self.config_core.get('date_format') == 'MDY':
             return day.strftime("%-m/%-d/%Y")
         else:
@@ -177,8 +191,9 @@ class TimeSkill(MycroftSkill):
 
     def display(self, display_time):
         if display_time:
-	        self.display_mark1(display_time)
-	        self.display_mark2(display_time)
+            if self.platform == "mycroft_mark_1":
+                self.display_mark1(display_time)
+            self.display_gui(display_time)
 
     def display_mark1(self, display_time):
         # Map characters to the display encoding for a Mark 1
@@ -232,8 +247,8 @@ class TimeSkill(MycroftSkill):
         msg = self.bus.wait_for_response(Message("private.mycroftai.has_alarm"))
         return msg and msg.data.get("active_alarms", 0) > 0
 
-    def display_mark2(self, display_time):
-        """ Display time on the Mark-2. """
+    def display_gui(self, display_time):
+        """ Display time on the Mycroft GUI. """
         self.gui.clear()
         self.gui['time_string'] = display_time
         self.gui['ampm_string'] = ''
@@ -297,6 +312,9 @@ class TimeSkill(MycroftSkill):
                         except IndexError:
                             pass
         return None
+
+    ######################################################################
+    ## Time queries / display
 
     @intent_handler(IntentBuilder("").require("Query").require("Time").
                     optionally("Location"))
@@ -367,6 +385,9 @@ class TimeSkill(MycroftSkill):
         self.settings["show_time"] = True
         self.update_display(True)
 
+    ######################################################################
+    ## Date queries
+
     @intent_handler(IntentBuilder("").require("Query").require("Date").
                     optionally("Location"))
     def handle_query_date(self, message):
@@ -412,14 +433,16 @@ class TimeSkill(MycroftSkill):
         self.show_date(location, day=day)
         time.sleep(10)
         mycroft.audio.wait_while_speaking()
-        self.enclosure.mouth_reset()
-        self.enclosure.activate_mouth_events()
+        if self.platform == "mycroft_mark_1":
+            self.enclosure.mouth_reset()
+            self.enclosure.activate_mouth_events()
         self.answering_query = False
         self.displayed_time = None
 
     def show_date(self, location, day=None):
-        self.show_date_mark1(location, day)
-        self.show_date_mark2(location, day)
+        if self.platform == "mycroft_mark_1":
+            self.show_date_mark1(location, day)
+        self.show_date_gui(location, day)
 
     def show_date_mark1(self, location, day):
         show = self.get_display_date(day, location)
@@ -441,7 +464,7 @@ class TimeSkill(MycroftSkill):
             day = self.get_local_datetime(location)
         return day.strftime("%Y")
 
-    def show_date_mark2(self, location, day):
+    def show_date_gui(self, location, day):
         self.gui.clear()
         self.gui['date_string'] = self.get_display_date(day, location)
         self.gui['weekday_string'] = self.get_weekday(day, location)
