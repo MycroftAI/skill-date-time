@@ -1,0 +1,6 @@
+vad kommer klockan vara om {offset} (timmar|timme|minuter|minut|sekunder|sekund)
+vad är klockan om {offset} (timme|timmar|minut|minuter|sekund|sekunder)
+vad kommer klockan vara om {offset} (timme|timmar|minuter|minut|sekund|sekunder) (i|på) {location}
+vad är klockan om {offset} (timme|timmar|minut|minuter|sekund|sekunder) (i|på) {location}
+vad kommer klockan vara i {location} om {offset} (timme|timmar|minut|minuter|sekund|sekunder)
+Vad är klockan i {location} om {offset} (timme|timmar|minut|minuter|sekund|sekunder)
