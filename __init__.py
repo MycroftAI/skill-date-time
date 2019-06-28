@@ -444,6 +444,10 @@ class TimeSkill(MycroftSkill):
         self.answering_query = False
         self.displayed_time = None
 
+    @intent_handler(IntentBuilder("").require("Query").require("Month"))
+    def handle_day_for_date(self, message):
+        self.handle_query_date(message)
+
     def show_date(self, location, day=None):
         if self.platform == "mycroft_mark_1":
             self.show_date_mark1(location, day)
