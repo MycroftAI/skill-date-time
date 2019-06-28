@@ -486,6 +486,14 @@ class TimeSkill(MycroftSkill):
             'sunday_date': sunday_date
         })
 
+    @intent_handler(IntentBuilder("").require("Query").require("LeapYear"))
+    def handle_query_next_leap_year(self, message):
+        now = datetime.datetime.now()
+        leap_date = datetime.datetime(now.year, 2, 28)
+        year = now.year if now <= leap_date else now.year + 1
+        next_leap_year = self.get_next_leap_year(year)
+        self.speak_dialog('next.leap.year', {'year': next_leap_year})
+
     def show_date(self, location, day=None):
         if self.platform == "mycroft_mark_1":
             self.show_date_mark1(location, day)
@@ -510,6 +518,16 @@ class TimeSkill(MycroftSkill):
         if not day:
             day = self.get_local_datetime(location)
         return day.strftime("%Y")
+
+    def get_next_leap_year(self, year):
+        next_year = year + 1
+        if self.is_leap_year(next_year):
+            return next_year
+        else:
+            return self.get_next_leap_year(next_year)
+
+    def is_leap_year(self, year):
+        return (year % 400 == 0) or ((year % 4 == 0) and (year % 100 != 0))
 
     def show_date_gui(self, location, day):
         self.gui.clear()
