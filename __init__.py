@@ -448,6 +448,14 @@ class TimeSkill(MycroftSkill):
     def handle_day_for_date(self, message):
         self.handle_query_date(message)
 
+    @intent_handler(IntentBuilder("").require("Query").require("RelativeDay"))
+    def handle_query_relative_date(self, message):
+        self.handle_query_date(message)
+
+    @intent_handler(IntentBuilder("").require("RelativeDay").require("Date"))
+    def handle_query_relative_date_alt(self, message):
+        self.handle_query_date(message)
+
     @intent_file_handler("date.future.weekend.intent")
     def handle_date_future_weekend(self, message):
         # Strip year off nice_date as request is inherently close
