@@ -338,6 +338,7 @@ class TimeSkill(MycroftSkill):
     @intent_handler(IntentBuilder("current_time_handler_simple").
                     require("Time").optionally("Location"))
     def handle_current_time_simple(self, message):
+        self.handle_query_time(message)
 
     @intent_file_handler("what.time.is.it.intent")
     def handle_query_current_time_padatious(self, message):
