@@ -448,6 +448,36 @@ class TimeSkill(MycroftSkill):
     def handle_day_for_date(self, message):
         self.handle_query_date(message)
 
+    @intent_file_handler("date.future.weekend.intent")
+    def handle_date_future_weekend(self, message):
+        # Strip year off nice_date as request is inherently close
+        # Don't pass `now` to `nice_date` as a
+        # request on Friday will return "tomorrow"
+        saturday_date = ', '.join(nice_date(extract_datetime(
+                        'this saturday')[0]).split(', ')[:2])
+        sunday_date = ', '.join(nice_date(extract_datetime(
+                      'this sunday')[0]).split(', ')[:2])
+        self.speak_dialog('date.future.weekend', {
+            'direction': 'next',
+            'saturday_date': saturday_date,
+            'sunday_date': sunday_date
+        })
+
+    @intent_file_handler("date.last.weekend.intent")
+    def handle_date_last_weekend(self, message):
+        # Strip year off nice_date as request is inherently close
+        # Don't pass `now` to `nice_date` as a
+        # request on Monday will return "yesterday"
+        saturday_date = ', '.join(nice_date(extract_datetime(
+                        'this saturday')[0]).split(', ')[:2])
+        sunday_date = ', '.join(nice_date(extract_datetime(
+                      'this sunday')[0]).split(', ')[:2])
+        self.speak_dialog('date.last.weekend', {
+            'direction': 'last',
+            'saturday_date': saturday_date,
+            'sunday_date': sunday_date
+        })
+
     def show_date(self, location, day=None):
         if self.platform == "mycroft_mark_1":
             self.show_date_mark1(location, day)
