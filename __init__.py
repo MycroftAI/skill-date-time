@@ -291,10 +291,6 @@ class TimeSkill(MycroftSkill):
                     self.enclosure.display_manager.remove_active()
                 self.displayed_time = None
 
-    @intent_file_handler("what.time.is.it.intent")
-    def handle_query_time_alt(self, message):
-        self.handle_query_time(message)
-
     def _extract_location(self, utt):
         # if "Location" in message.data:
         #     return message.data["Location"]
@@ -338,6 +334,14 @@ class TimeSkill(MycroftSkill):
         self.enclosure.activate_mouth_events()
         self.answering_query = False
         self.displayed_time = None
+
+    @intent_handler(IntentBuilder("current_time_handler_simple").
+                    require("Time").optionally("Location"))
+    def handle_current_time_simple(self, message):
+
+    @intent_file_handler("what.time.is.it.intent")
+    def handle_query_current_time_padatious(self, message):
+        self.handle_query_time(message)
 
     @intent_file_handler("what.time.will.it.be.intent")
     def handle_query_future_time(self, message):
