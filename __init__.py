@@ -396,7 +396,11 @@ class TimeSkill(MycroftSkill):
 
     def handle_query_date(self, message, response_type="simple"):
         utt = message.data.get('utterance', "").lower()
-        extract = extract_datetime(utt)
+        try:
+            extract = extract_datetime(utt)
+        except:
+            self.speak_dialog('date.not.found')
+            return
         day = extract[0]
 
         # check if a Holiday was requested, e.g. "What day is Christmas?"
@@ -472,7 +476,8 @@ class TimeSkill(MycroftSkill):
     def handle_day_for_date(self, message):
         self.handle_query_date(message, response_type="relative")
 
-    @intent_handler(IntentBuilder("").require("Query").require("RelativeDay"))
+    @intent_handler(IntentBuilder("").require("Query").require("RelativeDay")
+                                     .optionally("Date"))
     def handle_query_relative_date(self, message):
         self.handle_query_date(message, response_type="relative")
 
