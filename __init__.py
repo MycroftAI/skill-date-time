@@ -13,16 +13,15 @@
 # limitations under the License.
 
 import datetime
-import re
+import holidays
 import pytz
+import re
 import time
 import tzlocal
 from astral import Astral
-import holidays
 
-from adapt.intent import IntentBuilder
 import mycroft.audio
-# from mycroft.util.format import nice_time
+from adapt.intent import IntentBuilder
 from mycroft.util.format import pronounce_number, nice_date, \
                                 nice_duration, nice_time
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
@@ -435,6 +434,7 @@ class TimeSkill(MycroftSkill):
         if response_type is "simple":
             self.speak_dialog("date", {"date": speak_date})
         elif response_type is "relative":
+            # remove time data to get clean dates
             day_date = day.replace(hour=0, minute=0,
                                    second=0, microsecond=0)
             today_date = today.replace(hour=0, minute=0,
@@ -446,6 +446,7 @@ class TimeSkill(MycroftSkill):
                                   {"date": speak_date,
                                    "num_days": speak_num_days})
             else:
+                # if in the past, make positive before getting duration
                 speak_num_days = nice_duration(num_days * -86400)
                 self.speak_dialog("date.relative.past",
                                   {"date": speak_date,
