@@ -23,7 +23,8 @@ import holidays
 from adapt.intent import IntentBuilder
 import mycroft.audio
 # from mycroft.util.format import nice_time
-from mycroft.util.format import pronounce_number, nice_date, nice_time
+from mycroft.util.format import pronounce_number, nice_date, \
+                                nice_duration, nice_time
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler, intent_file_handler
@@ -394,9 +395,7 @@ class TimeSkill(MycroftSkill):
     ######################################################################
     ## Date queries
 
-    @intent_handler(IntentBuilder("").require("Query").require("Date").
-                    optionally("Location"))
-    def handle_query_date(self, message):
+    def handle_query_date(self, message, response_type="simple"):
         utt = message.data.get('utterance', "").lower()
         extract = extract_datetime(utt)
         day = extract[0]
@@ -421,18 +420,36 @@ class TimeSkill(MycroftSkill):
                 break
 
         location = self._extract_location(utt)
+        today = to_local(now_utc())
         if location:
             # TODO: Timezone math!
-            today = to_local(now_utc())
-            if day.year == today.year and day.month == today.month and day.day == today.day:
-                day = now_utc()  # for questions like "what is the day in sydney"
+            if (day.year == today.year and day.month == today.month
+                and day.day == today.day):
+                day = now_utc()  # for questions ~ "what is the day in sydney"
             day = self.get_local_datetime(location, dtUTC=day)
         if not day:
             return  # failed in timezone lookup
 
-        speak = nice_date(day, lang=self.lang)
+        speak_date = nice_date(day, lang=self.lang)
         # speak it
-        self.speak_dialog("date", {"date": speak})
+        if response_type is "simple":
+            self.speak_dialog("date", {"date": speak_date})
+        elif response_type is "relative":
+            day_date = day.replace(hour=0, minute=0,
+                                   second=0, microsecond=0)
+            today_date = today.replace(hour=0, minute=0,
+                                       second=0, microsecond=0)
+            num_days = (day_date - today_date).days
+            if num_days >= 0:
+                speak_num_days = nice_duration(num_days * 86400)
+                self.speak_dialog("date.relative.future",
+                                  {"date": speak_date,
+                                   "num_days": speak_num_days})
+            else:
+                speak_num_days = nice_duration(num_days * -86400)
+                self.speak_dialog("date.relative.past",
+                                  {"date": speak_date,
+                                   "num_days": speak_num_days})
 
         # and briefly show the date
         self.answering_query = True
@@ -445,17 +462,22 @@ class TimeSkill(MycroftSkill):
         self.answering_query = False
         self.displayed_time = None
 
+    @intent_handler(IntentBuilder("").require("Query").require("Date").
+                    optionally("Location"))
+    def handle_query_date_simple(self, message):
+        self.handle_query_date(message, response_type="simple")
+
     @intent_handler(IntentBuilder("").require("Query").require("Month"))
     def handle_day_for_date(self, message):
-        self.handle_query_date(message)
+        self.handle_query_date(message, response_type="relative")
 
     @intent_handler(IntentBuilder("").require("Query").require("RelativeDay"))
     def handle_query_relative_date(self, message):
-        self.handle_query_date(message)
+        self.handle_query_date(message, response_type="relative")
 
     @intent_handler(IntentBuilder("").require("RelativeDay").require("Date"))
     def handle_query_relative_date_alt(self, message):
-        self.handle_query_date(message)
+        self.handle_query_date(message, response_type="relative")
 
     @intent_file_handler("date.future.weekend.intent")
     def handle_date_future_weekend(self, message):
