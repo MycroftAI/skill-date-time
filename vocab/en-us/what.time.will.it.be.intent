@@ -1,7 +1,13 @@
-what time will it be (in|) {offset} (hours|minutes|seconds) (from now|)
-what is the time in {offset} (hours|minutes|seconds) (from now|)
-what time will it be (in|) {offset} (hours|minutes|seconds) (from now|) in {location}
-what is the time in {offset} (hours|minutes|seconds) (from now|) in {location}
-what time will it be in {location} (in|) {offset} (hours|minutes|seconds) (from now|)
-what is the time in {location} in {offset} (hours|minutes|seconds) (from now!)
-
+what (time will it|will the time) be (in|) {offset} (hours|minutes|seconds) (from now|)
+what (time will it|will the time) be (in|) {offset} (hours|minutes|seconds) (from now|) in {location}
+(what is|what's|what will be) the time in {offset} (hours|minutes|seconds) (from now|)
+(what is|what's|what will be) the time in {offset} (hours|minutes|seconds) (from now|) in {location}
+(give|tell) me the time (in|) {offset} (hours|minutes|seconds) (from now|)
+(give|tell) me the time (in|) {offset} (hours|minutes|seconds) (from now|) in {location}
+(in|) {offset} (hours|minutes|seconds) what (time will it be|will the time be)
+(in|) {offset} (hours|minutes|seconds) (from now|) what (time will it be|will the time be) (at|in|for) {location}
+when is it {offset} (hours|minutes|seconds) (from now|)
+when is it {offset} (hours|minutes|seconds) (from now|) in {location}
+what time (will it be|is it) in {location} (in|) {offset} (hours|minutes|seconds) (from now|)
+(what is|what's|what will be) the time in {location} in {offset} (hours|minutes|seconds) (from now!)
+(at|in|for) {location} what (time will it be|will the time be) (in|) {offset} (hours|minutes|seconds)

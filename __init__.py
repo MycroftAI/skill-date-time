@@ -13,17 +13,17 @@
 # limitations under the License.
 
 import datetime
-import re
+import holidays
 import pytz
+import re
 import time
 import tzlocal
 from astral import Astral
-import holidays
 
-from adapt.intent import IntentBuilder
 import mycroft.audio
-# from mycroft.util.format import nice_time
-from mycroft.util.format import pronounce_number, nice_date, nice_time
+from adapt.intent import IntentBuilder
+from mycroft.util.format import pronounce_number, nice_date, \
+                                nice_duration, nice_time
 from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler, intent_file_handler
@@ -69,7 +69,7 @@ class TimeSkill(MycroftSkill):
     @resting_screen_handler('Time and Date')
     def handle_idle(self, message):
         self.gui.clear()
-        self.log.info('Activating Time/Date resting page')
+        self.log.debug('Activating Time/Date resting page')
         self.gui['time_string'] = self.get_display_current_time()
         self.gui['ampm_string'] = ''
         self.gui['date_string'] = self.get_display_date()
@@ -291,10 +291,6 @@ class TimeSkill(MycroftSkill):
                     self.enclosure.display_manager.remove_active()
                 self.displayed_time = None
 
-    @intent_file_handler("what.time.is.it.intent")
-    def handle_query_time_alt(self, message):
-        self.handle_query_time(message)
-
     def _extract_location(self, utt):
         # if "Location" in message.data:
         #     return message.data["Location"]
@@ -339,6 +335,11 @@ class TimeSkill(MycroftSkill):
         self.answering_query = False
         self.displayed_time = None
 
+    @intent_handler(IntentBuilder("current_time_handler_simple").
+                    require("Time").optionally("Location"))
+    def handle_current_time_simple(self, message):
+        self.handle_query_time(message)
+
     @intent_file_handler("what.time.will.it.be.intent")
     def handle_query_future_time(self, message):
         utt = normalize(message.data.get('utterance', "").lower())
@@ -365,6 +366,11 @@ class TimeSkill(MycroftSkill):
         self.answering_query = False
         self.displayed_time = None
 
+    @intent_handler(IntentBuilder("future_time_handler_simple").
+                    require("Time").require("Future").optionally("Location"))
+    def handle_future_time_simple(self, message):
+        self.handle_query_future_time(message)
+
     @intent_handler(IntentBuilder("").require("Display").require("Time").
                     optionally("Location"))
     def handle_show_time(self, message):
@@ -388,11 +394,13 @@ class TimeSkill(MycroftSkill):
     ######################################################################
     ## Date queries
 
-    @intent_handler(IntentBuilder("").require("Query").require("Date").
-                    optionally("Location"))
-    def handle_query_date(self, message):
+    def handle_query_date(self, message, response_type="simple"):
         utt = message.data.get('utterance', "").lower()
-        extract = extract_datetime(utt)
+        try:
+            extract = extract_datetime(utt)
+        except:
+            self.speak_dialog('date.not.found')
+            return
         day = extract[0]
 
         # check if a Holiday was requested, e.g. "What day is Christmas?"
@@ -415,18 +423,38 @@ class TimeSkill(MycroftSkill):
                 break
 
         location = self._extract_location(utt)
+        today = to_local(now_utc())
         if location:
             # TODO: Timezone math!
-            today = to_local(now_utc())
-            if day.year == today.year and day.month == today.month and day.day == today.day:
-                day = now_utc()  # for questions like "what is the day in sydney"
+            if (day.year == today.year and day.month == today.month
+                and day.day == today.day):
+                day = now_utc()  # for questions ~ "what is the day in sydney"
             day = self.get_local_datetime(location, dtUTC=day)
         if not day:
             return  # failed in timezone lookup
 
-        speak = nice_date(day, lang=self.lang)
+        speak_date = nice_date(day, lang=self.lang)
         # speak it
-        self.speak_dialog("date", {"date": speak})
+        if response_type is "simple":
+            self.speak_dialog("date", {"date": speak_date})
+        elif response_type is "relative":
+            # remove time data to get clean dates
+            day_date = day.replace(hour=0, minute=0,
+                                   second=0, microsecond=0)
+            today_date = today.replace(hour=0, minute=0,
+                                       second=0, microsecond=0)
+            num_days = (day_date - today_date).days
+            if num_days >= 0:
+                speak_num_days = nice_duration(num_days * 86400)
+                self.speak_dialog("date.relative.future",
+                                  {"date": speak_date,
+                                   "num_days": speak_num_days})
+            else:
+                # if in the past, make positive before getting duration
+                speak_num_days = nice_duration(num_days * -86400)
+                self.speak_dialog("date.relative.past",
+                                  {"date": speak_date,
+                                   "num_days": speak_num_days})
 
         # and briefly show the date
         self.answering_query = True
@@ -438,6 +466,62 @@ class TimeSkill(MycroftSkill):
             self.enclosure.activate_mouth_events()
         self.answering_query = False
         self.displayed_time = None
+
+    @intent_handler(IntentBuilder("").require("Query").require("Date").
+                    optionally("Location"))
+    def handle_query_date_simple(self, message):
+        self.handle_query_date(message, response_type="simple")
+
+    @intent_handler(IntentBuilder("").require("Query").require("Month"))
+    def handle_day_for_date(self, message):
+        self.handle_query_date(message, response_type="relative")
+
+    @intent_handler(IntentBuilder("").require("Query").require("RelativeDay")
+                                     .optionally("Date"))
+    def handle_query_relative_date(self, message):
+        self.handle_query_date(message, response_type="relative")
+
+    @intent_handler(IntentBuilder("").require("RelativeDay").require("Date"))
+    def handle_query_relative_date_alt(self, message):
+        self.handle_query_date(message, response_type="relative")
+
+    @intent_file_handler("date.future.weekend.intent")
+    def handle_date_future_weekend(self, message):
+        # Strip year off nice_date as request is inherently close
+        # Don't pass `now` to `nice_date` as a
+        # request on Friday will return "tomorrow"
+        saturday_date = ', '.join(nice_date(extract_datetime(
+                        'this saturday')[0]).split(', ')[:2])
+        sunday_date = ', '.join(nice_date(extract_datetime(
+                      'this sunday')[0]).split(', ')[:2])
+        self.speak_dialog('date.future.weekend', {
+            'direction': 'next',
+            'saturday_date': saturday_date,
+            'sunday_date': sunday_date
+        })
+
+    @intent_file_handler("date.last.weekend.intent")
+    def handle_date_last_weekend(self, message):
+        # Strip year off nice_date as request is inherently close
+        # Don't pass `now` to `nice_date` as a
+        # request on Monday will return "yesterday"
+        saturday_date = ', '.join(nice_date(extract_datetime(
+                        'this saturday')[0]).split(', ')[:2])
+        sunday_date = ', '.join(nice_date(extract_datetime(
+                      'this sunday')[0]).split(', ')[:2])
+        self.speak_dialog('date.last.weekend', {
+            'direction': 'last',
+            'saturday_date': saturday_date,
+            'sunday_date': sunday_date
+        })
+
+    @intent_handler(IntentBuilder("").require("Query").require("LeapYear"))
+    def handle_query_next_leap_year(self, message):
+        now = datetime.datetime.now()
+        leap_date = datetime.datetime(now.year, 2, 28)
+        year = now.year if now <= leap_date else now.year + 1
+        next_leap_year = self.get_next_leap_year(year)
+        self.speak_dialog('next.leap.year', {'year': next_leap_year})
 
     def show_date(self, location, day=None):
         if self.platform == "mycroft_mark_1":
@@ -463,6 +547,16 @@ class TimeSkill(MycroftSkill):
         if not day:
             day = self.get_local_datetime(location)
         return day.strftime("%Y")
+
+    def get_next_leap_year(self, year):
+        next_year = year + 1
+        if self.is_leap_year(next_year):
+            return next_year
+        else:
+            return self.get_next_leap_year(next_year)
+
+    def is_leap_year(self, year):
+        return (year % 400 == 0) or ((year % 4 == 0) and (year % 100 != 0))
 
     def show_date_gui(self, location, day):
         self.gui.clear()
