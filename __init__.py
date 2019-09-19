@@ -407,15 +407,15 @@ class TimeSkill(MycroftSkill):
         year = extract_number(utt)
         if not year or year < 1500 or year > 3000:  # filter out non-years
             year = day.year
-        all = {}
+        holiday_dict = {}
         # TODO: How to pick a location for holidays?
         for st in holidays.US.STATES:
             l = holidays.US(years=[year], state=st)
             for d, name in l.items():
-                if not name in all:
-                    all[name] = d
-        for name in all:
-            d = all[name]
+                if not name in holiday_dict:
+                    holiday_dict[name] = d
+        for name in holiday_dict:
+            d = holiday_dict[name]
             # Uncomment to display all holidays in the database
             # self.log.info("Day, name: " +str(d) + " " + str(name))
             if name.replace(" Day", "").lower() in utt:
@@ -467,23 +467,34 @@ class TimeSkill(MycroftSkill):
         self.answering_query = False
         self.displayed_time = None
 
-    @intent_handler(IntentBuilder("").require("Query").require("Date").
-                    optionally("Location"))
+    # Whats the date? What's the date in Moscow?
+    @intent_handler(IntentBuilder("").require("Query").require("Date")
+                    .optionally("Location"))
     def handle_query_date_simple(self, message):
         self.handle_query_date(message, response_type="simple")
 
+    # What's tomorrow?
+    @intent_handler(IntentBuilder("").optionally("Query").optionally("Date")
+                    .require("ImmediateRelativeDate"))
+    def handle_query_simple_relative_date(self, message):
+        self.handle_query_date(message, response_type="simple")
+
+    # What is the 3rd of September?
     @intent_handler(IntentBuilder("").require("Query").require("Month"))
     def handle_day_for_date(self, message):
         self.handle_query_date(message, response_type="relative")
 
-    @intent_handler(IntentBuilder("").require("Query").require("RelativeDay")
+    # What is the date next Tuesday?
+    @intent_handler(IntentBuilder("").optionally("Query").require("DayOfWeek")
                                      .optionally("Date"))
     def handle_query_relative_date(self, message):
         self.handle_query_date(message, response_type="relative")
 
-    @intent_handler(IntentBuilder("").require("RelativeDay").require("Date"))
-    def handle_query_relative_date_alt(self, message):
-        self.handle_query_date(message, response_type="relative")
+    # When is Columbus Day
+    @intent_handler(IntentBuilder("").require("Query").optionally("Date")
+                    .optionally("supported.holidays"))
+    def handle_query_holiday_date(self, message):
+        self.handle_query_date(message, response_type="simple")
 
     @intent_file_handler("date.future.weekend.intent")
     def handle_date_future_weekend(self, message):
