@@ -407,15 +407,16 @@ class TimeSkill(MycroftSkill):
         year = extract_number(utt)
         if not year or year < 1500 or year > 3000:  # filter out non-years
             year = day.year
-        all = {}
+        holiday_dict = {}
         # TODO: How to pick a location for holidays?
         for st in holidays.US.STATES:
             l = holidays.US(years=[year], state=st)
             for d, name in l.items():
-                if not name in all:
-                    all[name] = d
-        for name in all:
-            d = all[name]
+                if not name in holiday_dict:
+                    holiday_dict[name] = d
+        self.log.info(holiday_dict.keys())
+        for name in holiday_dict:
+            d = holiday_dict[name]
             # Uncomment to display all holidays in the database
             # self.log.info("Day, name: " +str(d) + " " + str(name))
             if name.replace(" Day", "").lower() in utt:
@@ -489,6 +490,12 @@ class TimeSkill(MycroftSkill):
                                      .optionally("Date"))
     def handle_query_relative_date(self, message):
         self.handle_query_date(message, response_type="relative")
+
+    # When is Columbus Day
+    @intent_handler(IntentBuilder("").require("Query").optionally("Date")
+                    .optionally("supported.holidays"))
+    def handle_query_holiday_date(self, message):
+        self.handle_query_date(message, response_type="simple")
 
     @intent_file_handler("date.future.weekend.intent")
     def handle_date_future_weekend(self, message):
