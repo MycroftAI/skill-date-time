@@ -414,7 +414,6 @@ class TimeSkill(MycroftSkill):
             for d, name in l.items():
                 if not name in holiday_dict:
                     holiday_dict[name] = d
-        self.log.info(holiday_dict.keys())
         for name in holiday_dict:
             d = holiday_dict[name]
             # Uncomment to display all holidays in the database
