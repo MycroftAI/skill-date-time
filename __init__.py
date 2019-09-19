@@ -467,22 +467,27 @@ class TimeSkill(MycroftSkill):
         self.answering_query = False
         self.displayed_time = None
 
-    @intent_handler(IntentBuilder("").require("Query").require("Date").
-                    optionally("Location"))
+    # Whats the date? What's the date in Moscow?
+    @intent_handler(IntentBuilder("").require("Query").require("Date")
+                    .optionally("Location"))
     def handle_query_date_simple(self, message):
         self.handle_query_date(message, response_type="simple")
 
+    # What's tomorrow?
+    @intent_handler(IntentBuilder("").optionally("Query").optionally("Date")
+                    .require("ImmediateRelativeDate"))
+    def handle_query_simple_relative_date(self, message):
+        self.handle_query_date(message, response_type="simple")
+
+    # What is the 3rd of September?
     @intent_handler(IntentBuilder("").require("Query").require("Month"))
     def handle_day_for_date(self, message):
         self.handle_query_date(message, response_type="relative")
 
-    @intent_handler(IntentBuilder("").require("Query").require("RelativeDay")
+    # What is the date next Tuesday?
+    @intent_handler(IntentBuilder("").optionally("Query").require("DayOfWeek")
                                      .optionally("Date"))
     def handle_query_relative_date(self, message):
-        self.handle_query_date(message, response_type="relative")
-
-    @intent_handler(IntentBuilder("").require("RelativeDay").require("Date"))
-    def handle_query_relative_date_alt(self, message):
         self.handle_query_date(message, response_type="relative")
 
     @intent_file_handler("date.future.weekend.intent")
