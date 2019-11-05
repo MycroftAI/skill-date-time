@@ -282,15 +282,14 @@ class TimeSkill(MycroftSkill):
         display_time = self.get_display_current_time()
         self.gui['time_string'] = display_time
         self.gui['date_string'] = self.get_display_date()
-        self.gui['ampm_string'] = '' # TODO
+        self.gui['ampm_string'] = ''  # TODO
 
-        if self._is_display_idle():
-            display_screen_data = dict(
-                weekday_string=self.get_weekday(),
-                month_string=self.get_month_date(),
-                time_string=display_time
-            )
-            self.gui.display_screen(name='idle', data=display_screen_data)
+        display_screen_data = dict(
+            weekday_string=self.get_weekday(),
+            month_string=self.get_month_date(),
+            time_string=display_time
+        )
+        self.gui.display_screen(name='idle', data=display_screen_data)
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
