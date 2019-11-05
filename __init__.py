@@ -68,15 +68,25 @@ class TimeSkill(MycroftSkill):
 
     @resting_screen_handler('Time and Date')
     def handle_idle(self, message):
+        self.log.info('*** Entering Idle Screen Manage ***')
         self.gui.clear()
         self.log.debug('Activating Time/Date resting page')
-        self.gui['time_string'] = self.get_display_current_time()
+        time_string = self.get_display_current_time()
+        weekday_string = self.get_weekday()
+        month_string = self.get_month_date()
+        self.gui['time_string'] = time_string
         self.gui['ampm_string'] = ''
         self.gui['date_string'] = self.get_display_date()
-        self.gui['weekday_string'] = self.get_weekday()
-        self.gui['month_string'] = self.get_month_date()
+        self.gui['weekday_string'] = weekday_string
+        self.gui['month_string'] = month_string
         self.gui['year_string'] = self.get_year()
         self.gui.show_page('idle.qml')
+        display_screen_data = dict(
+            time_string=time_string,
+            weekday_string=weekday_string,
+            month_string=month_string
+        )
+        self.gui.display_screen(name='idle', data=display_screen_data)
 
     @property
     def use_24hour(self):
@@ -254,6 +264,9 @@ class TimeSkill(MycroftSkill):
         self.gui['ampm_string'] = ''
         self.gui['date_string'] = self.get_display_date()
         self.gui.show_page('time.qml')
+        hour, minute = display_time.split(':')
+        display_screen_data = dict(hour=hour, minute=minute)
+        self.gui.display_screen(name='time', data=display_screen_data)
 
     def _is_display_idle(self):
         # check if the display is being used by another skill right now
@@ -266,9 +279,18 @@ class TimeSkill(MycroftSkill):
         if self.answering_query:
             return
 
-        self.gui['time_string'] = self.get_display_current_time()
+        display_time = self.get_display_current_time()
+        self.gui['time_string'] = display_time
         self.gui['date_string'] = self.get_display_date()
         self.gui['ampm_string'] = '' # TODO
+
+        if self._is_display_idle():
+            display_screen_data = dict(
+                weekday_string=self.get_weekday(),
+                month_string=self.get_month_date(),
+                time_string=display_time
+            )
+            self.gui.display_screen(name='idle', data=display_screen_data)
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -485,35 +507,35 @@ class TimeSkill(MycroftSkill):
     def handle_query_relative_date_alt(self, message):
         self.handle_query_date(message, response_type="relative")
 
-    @intent_file_handler("date.future.weekend.intent")
-    def handle_date_future_weekend(self, message):
-        # Strip year off nice_date as request is inherently close
-        # Don't pass `now` to `nice_date` as a
-        # request on Friday will return "tomorrow"
-        saturday_date = ', '.join(nice_date(extract_datetime(
-                        'this saturday')[0]).split(', ')[:2])
-        sunday_date = ', '.join(nice_date(extract_datetime(
-                      'this sunday')[0]).split(', ')[:2])
-        self.speak_dialog('date.future.weekend', {
-            'direction': 'next',
-            'saturday_date': saturday_date,
-            'sunday_date': sunday_date
-        })
+    # @intent_file_handler("date.future.weekend.intent")
+    # def handle_date_future_weekend(self, message):
+    #     # Strip year off nice_date as request is inherently close
+    #     # Don't pass `now` to `nice_date` as a
+    #     # request on Friday will return "tomorrow"
+    #     saturday_date = ', '.join(nice_date(extract_datetime(
+    #                     'this saturday')[0]).split(', ')[:2])
+    #     sunday_date = ', '.join(nice_date(extract_datetime(
+    #                   'this sunday')[0]).split(', ')[:2])
+    #     self.speak_dialog('date.future.weekend', {
+    #         'direction': 'next',
+    #         'saturday_date': saturday_date,
+    #         'sunday_date': sunday_date
+    #     })
 
-    @intent_file_handler("date.last.weekend.intent")
-    def handle_date_last_weekend(self, message):
-        # Strip year off nice_date as request is inherently close
-        # Don't pass `now` to `nice_date` as a
-        # request on Monday will return "yesterday"
-        saturday_date = ', '.join(nice_date(extract_datetime(
-                        'this saturday')[0]).split(', ')[:2])
-        sunday_date = ', '.join(nice_date(extract_datetime(
-                      'this sunday')[0]).split(', ')[:2])
-        self.speak_dialog('date.last.weekend', {
-            'direction': 'last',
-            'saturday_date': saturday_date,
-            'sunday_date': sunday_date
-        })
+    # @intent_file_handler("date.last.weekend.intent")
+    # def handle_date_last_weekend(self, message):
+    #     # Strip year off nice_date as request is inherently close
+    #     # Don't pass `now` to `nice_date` as a
+    #     # request on Monday will return "yesterday"
+    #     saturday_date = ', '.join(nice_date(extract_datetime(
+    #                     'this saturday')[0]).split(', ')[:2])
+    #     sunday_date = ', '.join(nice_date(extract_datetime(
+    #                   'this sunday')[0]).split(', ')[:2])
+    #     self.speak_dialog('date.last.weekend', {
+    #         'direction': 'last',
+    #         'saturday_date': saturday_date,
+    #         'sunday_date': sunday_date
+    #     })
 
     @intent_handler(IntentBuilder("").require("Query").require("LeapYear"))
     def handle_query_next_leap_year(self, message):
@@ -560,11 +582,20 @@ class TimeSkill(MycroftSkill):
 
     def show_date_gui(self, location, day):
         self.gui.clear()
+        day_of_week = self.get_weekday(day, location)
+        month_and_day = self.get_month_date(day, location)
         self.gui['date_string'] = self.get_display_date(day, location)
-        self.gui['weekday_string'] = self.get_weekday(day, location)
-        self.gui['month_string'] = self.get_month_date(day, location)
+        self.gui['weekday_string'] = day_of_week
+        self.gui['month_string'] = month_and_day
         self.gui['year_string'] = self.get_year(day, location)
         self.gui.show_page('date.qml')
+        month, day = month_and_day.split(' ')
+        display_screen_data = dict(
+            day_of_week=day_of_week,
+            month=month,
+            day=day
+        )
+        self.gui.display_screen(name='date', data=display_screen_data)
 
 
 def create_skill():
