@@ -335,8 +335,7 @@ class TimeSkill(MycroftSkill):
         self.answering_query = False
         self.displayed_time = None
 
-    @intent_handler(IntentBuilder("current_time_handler_simple").
-                    require("Time").optionally("Location"))
+    @intent_handler("what.time.is.it.intent")
     def handle_current_time_simple(self, message):
         self.handle_query_time(message)
 
