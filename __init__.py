@@ -289,7 +289,7 @@ class TimeSkill(MycroftSkill):
             month_string=self.get_month_date(),
             time_string=display_time
         )
-        self.gui.display_screen(name='idle', data=display_screen_data)
+        self.gui.update_screen(name='idle', data=display_screen_data)
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -482,8 +482,8 @@ class TimeSkill(MycroftSkill):
         self.show_date(location, day=day)
         time.sleep(10)
         mycroft.audio.wait_while_speaking()
+        self.enclosure.mouth_reset()
         if self.platform == "mycroft_mark_1":
-            self.enclosure.mouth_reset()
             self.enclosure.activate_mouth_events()
         self.answering_query = False
         self.displayed_time = None
