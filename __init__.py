@@ -394,6 +394,8 @@ class TimeSkill(MycroftSkill):
     ## Date queries
 
     def handle_query_date(self, message, response_type="simple"):
+        self.log.info("response_type")
+        self.log.info(response_type)
         utt = message.data.get('utterance', "").lower()
         try:
             extract = extract_datetime(utt)
@@ -478,11 +480,17 @@ class TimeSkill(MycroftSkill):
     @intent_handler(IntentBuilder("").require("Query").require("RelativeDay")
                                      .optionally("Date"))
     def handle_query_relative_date(self, message):
-        self.handle_query_date(message, response_type="relative")
+        if self.voc_match(message.data.get('utterance', ""), 'Today'):
+            self.handle_query_date(message, response_type="simple")
+        else:
+            self.handle_query_date(message, response_type="relative")
 
     @intent_handler(IntentBuilder("").require("RelativeDay").require("Date"))
     def handle_query_relative_date_alt(self, message):
-        self.handle_query_date(message, response_type="relative")
+        if self.voc_match(message.data.get('utterance', ""), 'Today'):
+            self.handle_query_date(message, response_type="simple")
+        else:
+            self.handle_query_date(message, response_type="relative")
 
     @intent_file_handler("date.future.weekend.intent")
     def handle_date_future_weekend(self, message):
