@@ -394,8 +394,6 @@ class TimeSkill(MycroftSkill):
     ## Date queries
 
     def handle_query_date(self, message, response_type="simple"):
-        self.log.info("response_type")
-        self.log.info(response_type)
         utt = message.data.get('utterance', "").lower()
         try:
             extract = extract_datetime(utt)
