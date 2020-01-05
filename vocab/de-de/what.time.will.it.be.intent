@@ -4,3 +4,4 @@ wie spät ist es (in |) {offset} (Stunden | Minuten | Sekunden) (von jetzt |) in
 wie ist die Zeit in {offset} (Stunden | Minuten | Sekunden) (von jetzt |) in {location}
 wie spät ist es in {location} (in |) {offset} (Stunden | Minuten | Sekunden) (von jetzt |)
 wie ist die Zeit in {location} in {offset} (Stunden | Minuten | Sekunden) (von jetzt!)
+Was ist die Zeit in {location} in {offset} (Stunden | Minuten | Sekunden) (ab jetzt | von jetzt)
