@@ -212,7 +212,8 @@ class TimeSkill(MycroftSkill):
         return nice_time(dt, self.lang, speech=False,
                          use_24hour=self.use_24hour)
 
-    def get_spoken_current_time(self, location=None, dtUTC=None, force_ampm=False):
+    def get_spoken_current_time(self, location=None,
+                                dtUTC=None, force_ampm=False):
         # Get a formatted spoken time based on the user preferences
         dt = self.get_local_datetime(location, dtUTC)
         if not dt:
@@ -278,12 +279,16 @@ class TimeSkill(MycroftSkill):
 
         if self._is_alarm_set():
             # Show a dot in the upper-left
-            self.enclosure.mouth_display(img_code="CIAACA", x=29, refresh=False)
+            self.enclosure.mouth_display(img_code="CIAACA", x=29,
+                                         refresh=False)
         else:
-            self.enclosure.mouth_display(img_code="CIAAAA", x=29, refresh=False)
+            self.enclosure.mouth_display(img_code="CIAAAA", x=29,
+                                         refresh=False)
 
     def _is_alarm_set(self):
-        msg = self.bus.wait_for_response(Message("private.mycroftai.has_alarm"))
+        """Query the alarm skill if an alarm is set."""
+        query = Message("private.mycroftai.has_alarm")
+        msg = self.bus.wait_for_response(query)
         return msg and msg.data.get("active_alarms", 0) > 0
 
     def display_gui(self, display_time):
@@ -307,7 +312,7 @@ class TimeSkill(MycroftSkill):
 
         self.gui['time_string'] = self.get_display_current_time()
         self.gui['date_string'] = self.get_display_date()
-        self.gui['ampm_string'] = '' # TODO
+        self.gui['ampm_string'] = ''  # TODO
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -349,7 +354,7 @@ class TimeSkill(MycroftSkill):
         return None
 
     ######################################################################
-    ## Time queries / display
+    # Time queries / display
 
     @intent_handler(IntentBuilder("").require("Query").require("Time").
                     optionally("Location"))
@@ -430,13 +435,13 @@ class TimeSkill(MycroftSkill):
         self.update_display(True)
 
     ######################################################################
-    ## Date queries
+    # Date queries
 
     def handle_query_date(self, message, response_type="simple"):
         utt = message.data.get('utterance', "").lower()
         try:
             extract = extract_datetime(utt)
-        except:
+        except Exception:
             self.speak_dialog('date.not.found')
             return
         day = extract[0]
@@ -445,15 +450,15 @@ class TimeSkill(MycroftSkill):
         year = extract_number(utt)
         if not year or year < 1500 or year > 3000:  # filter out non-years
             year = day.year
-        all = {}
+        all_holidays = {}
         # TODO: How to pick a location for holidays?
         for st in holidays.US.STATES:
-            l = holidays.US(years=[year], state=st)
-            for d, name in l.items():
-                if not name in all:
-                    all[name] = d
-        for name in all:
-            d = all[name]
+            holiday_dict = holidays.US(years=[year], state=st)
+            for d, name in holiday_dict.items():
+                if name not in all_holidays:
+                    all_holidays[name] = d
+        for name in all_holidays:
+            d = all_holidays[name]
             # Uncomment to display all holidays in the database
             # self.log.info("Day, name: " +str(d) + " " + str(name))
             if name.replace(" Day", "").lower() in utt:
@@ -465,7 +470,7 @@ class TimeSkill(MycroftSkill):
         if location:
             # TODO: Timezone math!
             if (day.year == today.year and day.month == today.month
-                and day.day == today.day):
+                    and day.day == today.day):
                 day = now_utc()  # for questions ~ "what is the day in sydney"
             day = self.get_local_datetime(location, dtUTC=day)
         if not day:
