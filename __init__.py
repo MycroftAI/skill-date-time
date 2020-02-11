@@ -212,7 +212,8 @@ class TimeSkill(MycroftSkill):
         return nice_time(dt, self.lang, speech=False,
                          use_24hour=self.use_24hour)
 
-    def get_spoken_current_time(self, location=None, dtUTC=None, force_ampm=False):
+    def get_spoken_current_time(self, location=None,
+                                dtUTC=None, force_ampm=False):
         # Get a formatted spoken time based on the user preferences
         dt = self.get_local_datetime(location, dtUTC)
         if not dt:
@@ -278,12 +279,16 @@ class TimeSkill(MycroftSkill):
 
         if self._is_alarm_set():
             # Show a dot in the upper-left
-            self.enclosure.mouth_display(img_code="CIAACA", x=29, refresh=False)
+            self.enclosure.mouth_display(img_code="CIAACA", x=29,
+                                         refresh=False)
         else:
-            self.enclosure.mouth_display(img_code="CIAAAA", x=29, refresh=False)
+            self.enclosure.mouth_display(img_code="CIAAAA", x=29,
+                                         refresh=False)
 
     def _is_alarm_set(self):
-        msg = self.bus.wait_for_response(Message("private.mycroftai.has_alarm"))
+        """Query the alarm skill if an alarm is set."""
+        query = Message("private.mycroftai.has_alarm")
+        msg = self.bus.wait_for_response(query)
         return msg and msg.data.get("active_alarms", 0) > 0
 
     def display_gui(self, display_time):
@@ -307,7 +312,7 @@ class TimeSkill(MycroftSkill):
 
         self.gui['time_string'] = self.get_display_current_time()
         self.gui['date_string'] = self.get_display_date()
-        self.gui['ampm_string'] = '' # TODO
+        self.gui['ampm_string'] = ''  # TODO
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -349,7 +354,7 @@ class TimeSkill(MycroftSkill):
         return None
 
     ######################################################################
-    ## Time queries / display
+    # Time queries / display
 
     @intent_handler(IntentBuilder("").require("Query").require("Time").
                     optionally("Location"))
@@ -436,7 +441,7 @@ class TimeSkill(MycroftSkill):
         utt = message.data.get('utterance', "").lower()
         try:
             extract = extract_datetime(utt)
-        except:
+        except Exception:
             self.speak_dialog('date.not.found')
             return
         day = extract[0]
@@ -450,7 +455,7 @@ class TimeSkill(MycroftSkill):
         for st in holidays.US.STATES:
             l = holidays.US(years=[year], state=st)
             for d, name in l.items():
-                if not name in all:
+                if name not in all:
                     all[name] = d
         for name in all:
             d = all[name]
@@ -465,7 +470,7 @@ class TimeSkill(MycroftSkill):
         if location:
             # TODO: Timezone math!
             if (day.year == today.year and day.month == today.month
-                and day.day == today.day):
+                    and day.day == today.day):
                 day = now_utc()  # for questions ~ "what is the day in sydney"
             day = self.get_local_datetime(location, dtUTC=day)
         if not day:
