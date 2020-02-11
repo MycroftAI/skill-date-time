@@ -17,18 +17,16 @@ import holidays
 import pytz
 import re
 import time
-import tzlocal
 from astral import Astral
 
 import mycroft.audio
 from adapt.intent import IntentBuilder
-from mycroft.util.format import pronounce_number, nice_date, \
-                                nice_duration, nice_time
-from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
+from mycroft.util.format import nice_date, nice_duration, nice_time
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler, intent_file_handler
-from mycroft.util.parse import extract_datetime, fuzzy_match, extract_number, normalize
-from mycroft.util.time import now_utc, default_timezone, to_local
+from mycroft.util.parse import (extract_datetime, fuzzy_match, extract_number,
+                                normalize)
+from mycroft.util.time import now_utc, to_local
 from mycroft.skills.core import resting_screen_handler
 
 
