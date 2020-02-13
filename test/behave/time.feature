@@ -29,6 +29,9 @@ Feature: Date Time Skill Time functionality
     | do you know what time it is |
     | could you tell me the time please |
     | excuse me what's the time |
+    | what is the current time |
+    | what's the current time |
+    | what time |
 
   Scenario Outline: what's the time in a location
     Given an english speaking user

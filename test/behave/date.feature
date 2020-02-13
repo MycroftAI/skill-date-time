@@ -22,6 +22,7 @@ Feature: Date Time Skill Date functionality
     | today is what day |
     | what is the day of the week |
     | what is the day of the month |
+    | what is the day |
 
   Scenario Outline: what will the date be in the future
     Given an english speaking user
