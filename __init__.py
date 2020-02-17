@@ -17,19 +17,34 @@ import holidays
 import pytz
 import re
 import time
-import tzlocal
 from astral import Astral
 
 import mycroft.audio
 from adapt.intent import IntentBuilder
-from mycroft.util.format import pronounce_number, nice_date, \
-                                nice_duration, nice_time
-from mycroft.util.lang.format_de import nice_time_de, pronounce_ordinal_de
+from mycroft.util.format import nice_date, nice_duration, nice_time
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler, intent_file_handler
-from mycroft.util.parse import extract_datetime, fuzzy_match, extract_number, normalize
-from mycroft.util.time import now_utc, default_timezone, to_local
+from mycroft.util.parse import (extract_datetime, fuzzy_match, extract_number,
+                                normalize)
+from mycroft.util.time import now_utc, to_local
 from mycroft.skills.core import resting_screen_handler
+
+
+def speakable_timezone(tz):
+    """Convert timezone to a better speakable version
+
+    Splits joined words,  e.g. EasterIsland  to "Easter Island",
+    "North_Dakota" to "North Dakota" etc.
+    Then parses the output into the correct order for speech,
+    eg. "America/North Dakota/Center" to
+    resulting in something like  "Center North Dakota America", or
+    "Easter Island Chile"
+    """
+    say = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>", tz)
+    say = say.replace("_", " ")
+    say = say.split("/")
+    say.reverse()
+    return " ".join(say)
 
 
 class TimeSkill(MycroftSkill):
@@ -82,62 +97,86 @@ class TimeSkill(MycroftSkill):
     def use_24hour(self):
         return self.config_core.get('time_format') == 'full'
 
-    def get_timezone(self, locale):
+    def _get_timezone_from_builtins(self, locale):
         try:
             # This handles common city names, like "Dallas" or "Paris"
             return pytz.timezone(self.astral[locale].timezone)
-        except:
+        except Exception:
             pass
 
         try:
             # This handles codes like "America/Los_Angeles"
             return pytz.timezone(locale)
-        except:
+        except Exception:
             pass
+        return None
 
-        # Check lookup table for other timezones.  This can also
-        # be a translation layer.
-        # E.g. "china = GMT+8"
+    def _get_timezone_from_table(self, locale):
+        """Check lookup table for timezones.
+
+        This can also be a translation layer.
+        E.g. "china = GMT+8"
+        """
         timezones = self.translate_namedvalues("timezone.value")
         for timezone in timezones:
             if locale.lower() == timezone.lower():
                 # assumes translation is correct
                 return pytz.timezone(timezones[timezone].strip())
+        return None
 
-        # Now we gotta get a little fuzzy
-        # Look at the pytz list of all timezones. It consists of
-        # Location/Name pairs.  For example:
-        # ["Africa/Abidjan", "Africa/Accra", ... "America/Denver", ...
-        #  "America/New_York", ..., "America/North_Dakota/Center", ...
-        #  "Cuba", ..., "EST", ..., "Egypt", ..., "Etc/GMT+3", ...
-        #  "Etc/Zulu", ... "US/Eastern", ... "UTC", ..., "Zulu"]
+    def _get_timezone_from_fuzzymatch(self, locale):
+        """Fuzzymatch a location against the pytz timezones.
+
+        The pytz timezones consists of
+        Location/Name pairs.  For example:
+            ["Africa/Abidjan", "Africa/Accra", ... "America/Denver", ...
+             "America/New_York", ..., "America/North_Dakota/Center", ...
+             "Cuba", ..., "EST", ..., "Egypt", ..., "Etc/GMT+3", ...
+             "Etc/Zulu", ... "US/Eastern", ... "UTC", ..., "Zulu"]
+
+        These are parsed and compared against the provided location.
+        """
         target = locale.lower()
         best = None
         for name in pytz.all_timezones:
-            normalized = name.lower().replace("_", " ").split("/") # E.g. "Australia/Sydney"
+            # Separate at '/'
+            normalized = name.lower().replace("_", " ").split("/")
             if len(normalized) == 1:
                 pct = fuzzy_match(normalized[0], target)
             elif len(normalized) >= 2:
-                pct = fuzzy_match(normalized[1], target)                           # e.g. "Sydney"
-                pct2 = fuzzy_match(normalized[-2] + " " + normalized[-1], target)  # e.g. "Sydney Australia" or "Center North Dakota"
-                pct3 = fuzzy_match(normalized[-1] + " " + normalized[-2], target)  # e.g. "Australia Sydney"
-                pct = max(pct, pct2, pct3)
+                # Check for locations like "Sydney"
+                pct1 = fuzzy_match(normalized[1], target)
+                # locations like "Sydney Australia" or "Center North Dakota"
+                pct2 = fuzzy_match(normalized[-2] + " " + normalized[-1],
+                                   target)
+                pct3 = fuzzy_match(normalized[-1] + " " + normalized[-2],
+                                   target)
+                pct = max(pct1, pct2, pct3)
             if not best or pct >= best[0]:
                 best = (pct, name)
         if best and best[0] > 0.8:
-           # solid choice
-           return pytz.timezone(best[1])
-        if best and best[0] > 0.3:
-            # Convert to a better speakable version
-            say = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>", best[1])  # e.g. EasterIsland  to "Easter Island"
-            say = say.replace("_", " ")  # e.g. "North_Dakota" to "North Dakota"
-            say = say.split("/")  # e.g. "America/North Dakota/Center" to ["America", "North Dakota", "Center"]
-            say.reverse()
-            say = " ".join(say)   # e.g.  "Center North Dakota America", or "Easter Island Chile"
-            if self.ask_yesno("did.you.mean.timezone", data={"zone_name": say}) == "yes":
+            # solid choice
+            return pytz.timezone(best[1])
+        elif best and best[0] > 0.3:
+            say = speakable_timezone(best[1])
+            if self.ask_yesno("did.you.mean.timezone",
+                              data={"zone_name": say}) == "yes":
                 return pytz.timezone(best[1])
+        else:
+            return None
 
-        return None
+    def get_timezone(self, locale):
+        """Get the timezone.
+
+        This uses a variety of approaches to determine the intended timezone.
+        """
+        timezone = self._get_timezone_from_builtins(locale)
+        if not timezone:
+            timezone = self._get_timezone_from_table(locale)
+        if not timezone:
+            timezone = self._get_timezone_from_fuzzymatch(locale)
+
+        return timezone
 
     def get_local_datetime(self, location, dtUTC=None):
         if not dtUTC:
@@ -173,7 +212,8 @@ class TimeSkill(MycroftSkill):
         return nice_time(dt, self.lang, speech=False,
                          use_24hour=self.use_24hour)
 
-    def get_spoken_current_time(self, location=None, dtUTC=None, force_ampm=False):
+    def get_spoken_current_time(self, location=None,
+                                dtUTC=None, force_ampm=False):
         # Get a formatted spoken time based on the user preferences
         dt = self.get_local_datetime(location, dtUTC)
         if not dt:
@@ -239,12 +279,16 @@ class TimeSkill(MycroftSkill):
 
         if self._is_alarm_set():
             # Show a dot in the upper-left
-            self.enclosure.mouth_display(img_code="CIAACA", x=29, refresh=False)
+            self.enclosure.mouth_display(img_code="CIAACA", x=29,
+                                         refresh=False)
         else:
-            self.enclosure.mouth_display(img_code="CIAAAA", x=29, refresh=False)
+            self.enclosure.mouth_display(img_code="CIAAAA", x=29,
+                                         refresh=False)
 
     def _is_alarm_set(self):
-        msg = self.bus.wait_for_response(Message("private.mycroftai.has_alarm"))
+        """Query the alarm skill if an alarm is set."""
+        query = Message("private.mycroftai.has_alarm")
+        msg = self.bus.wait_for_response(query)
         return msg and msg.data.get("active_alarms", 0) > 0
 
     def display_gui(self, display_time):
@@ -268,7 +312,7 @@ class TimeSkill(MycroftSkill):
 
         self.gui['time_string'] = self.get_display_current_time()
         self.gui['date_string'] = self.get_display_date()
-        self.gui['ampm_string'] = '' # TODO
+        self.gui['ampm_string'] = ''  # TODO
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -310,7 +354,7 @@ class TimeSkill(MycroftSkill):
         return None
 
     ######################################################################
-    ## Time queries / display
+    # Time queries / display
 
     @intent_handler(IntentBuilder("").require("Query").require("Time").
                     optionally("Location"))
@@ -391,13 +435,13 @@ class TimeSkill(MycroftSkill):
         self.update_display(True)
 
     ######################################################################
-    ## Date queries
+    # Date queries
 
     def handle_query_date(self, message, response_type="simple"):
         utt = message.data.get('utterance', "").lower()
         try:
             extract = extract_datetime(utt)
-        except:
+        except Exception:
             self.speak_dialog('date.not.found')
             return
         day = extract[0]
@@ -406,15 +450,15 @@ class TimeSkill(MycroftSkill):
         year = extract_number(utt)
         if not year or year < 1500 or year > 3000:  # filter out non-years
             year = day.year
-        all = {}
+        all_holidays = {}
         # TODO: How to pick a location for holidays?
         for st in holidays.US.STATES:
-            l = holidays.US(years=[year], state=st)
-            for d, name in l.items():
-                if not name in all:
-                    all[name] = d
-        for name in all:
-            d = all[name]
+            holiday_dict = holidays.US(years=[year], state=st)
+            for d, name in holiday_dict.items():
+                if name not in all_holidays:
+                    all_holidays[name] = d
+        for name in all_holidays:
+            d = all_holidays[name]
             # Uncomment to display all holidays in the database
             # self.log.info("Day, name: " +str(d) + " " + str(name))
             if name.replace(" Day", "").lower() in utt:
@@ -426,7 +470,7 @@ class TimeSkill(MycroftSkill):
         if location:
             # TODO: Timezone math!
             if (day.year == today.year and day.month == today.month
-                and day.day == today.day):
+                    and day.day == today.day):
                 day = now_utc()  # for questions ~ "what is the day in sydney"
             day = self.get_local_datetime(location, dtUTC=day)
         if not day:
