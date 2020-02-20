@@ -6,6 +6,7 @@ Feature: Date Time Skill Time functionality
      Then "mycroft-date-time" should reply with dialog from "time.current.dialog"
 
   Examples: what time examples
+    | what time is it |
     | clock |
     | time |
     | what's the time |
@@ -39,7 +40,7 @@ Feature: Date Time Skill Time functionality
      Then "mycroft-date-time" should reply with dialog from "time.current.dialog"
 
   Examples: what time examples
-    | what's the time in a location |
+    | what is the time in a location |
     | what's the time in paris |
     | what time is it in Washington |
     | check the time in Washington DC |
@@ -74,7 +75,7 @@ Feature: Date Time Skill Time functionality
      Then "mycroft-date-time" should reply with dialog from "time.future.dialog"
 
   Examples: what time will it be in the future in a location
-     | what will the time be in the future in a location |
+     | what time will it be in the future in a location |
      | what time will it be in 8 hours in Berlin |
      | what time will it be 8 hours from now in Paris |
      | what's the time in Losa Angeles 8 hours from now |
