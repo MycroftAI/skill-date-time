@@ -26,7 +26,7 @@ from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler, intent_file_handler
 from mycroft.util.parse import (extract_datetime, fuzzy_match, extract_number,
                                 normalize)
-from mycroft.util.time import now_utc, to_local
+from mycroft.util.time import now_utc, to_local, now_local
 from mycroft.skills.core import resting_screen_handler
 
 
@@ -444,7 +444,7 @@ class TimeSkill(MycroftSkill):
         except Exception:
             self.speak_dialog('date.not.found')
             return
-        day = extract[0]
+        day = extract[0] if extract else now_local()
 
         # check if a Holiday was requested, e.g. "What day is Christmas?"
         year = extract_number(utt)
