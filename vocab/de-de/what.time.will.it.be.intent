@@ -1,6 +1,13 @@
-wie spät ist es (in |) {offset} (Stunden | Minuten | Sekunden) (ab jetzt |)
-wie ist die Zeit in {offset} (Stunden | Minuten | Sekunden) (von jetzt |)
-wie spät ist es (in |) {offset} (Stunden | Minuten | Sekunden) (von jetzt |) in {location}
+welche (Zeit wird es | wird die Zeit sein) (in |) {offset} (Stunden | Minuten | Sekunden) (von jetzt an |)
+welche (Zeit wird es | wird die Zeit sein) (in |) {offset} (Stunden | Minuten | Sekunden) (von jetzt |) in {location}
+(was ist | was | wie ist) die Zeit in {offset} (Stunden | Minuten | Sekunden) (ab jetzt |)
+(was ist | was | was wird sein) die Zeit in {offset} (Stunden | Minuten | Sekunden) (von jetzt |) in {location}
+(gib|nenne) mir die Zeit (in |) {offset} (Stunden | Minuten | Sekunden) (ab jetzt |)
+(gib|nenn) mir die Zeit (in |) {offset} (Stunden | Minuten | Sekunden) (von jetzt |) in {location}
+(wie|was|) (wird die Zeit | ist die Zeit) (in |) {offset} (Stunden | Minuten | Sekunden) sein
+(in |) {offset} (Stunden | Minuten | Sekunden) wie spät ist es (ab jetzt |) (um | in | für) {location}
+wann ist es in {offset} (Stunden | Minuten | Sekunden) (von jetzt |)
 wie ist die Zeit in {offset} (Stunden | Minuten | Sekunden) (von jetzt |) in {location}
 wie spät ist es in {location} (in |) {offset} (Stunden | Minuten | Sekunden) (von jetzt |)
-wie ist die Zeit in {location} in {offset} (Stunden | Minuten | Sekunden) (von jetzt!)
+(was ist | was | wie wird ) die Zeit in {location} in {offset} (Stunden | Minuten | Sekunden) (von jetzt an!)
+( | in | für) {location} wird (es Zeit | die Zeit) (in |) {offset} (Stunden | Minuten | Sekunden) sein
