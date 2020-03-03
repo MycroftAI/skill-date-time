@@ -50,11 +50,10 @@ Feature: Date Time Skill Time functionality
 
   Scenario Outline: what's the future time
     Given an english speaking user
-     When the user says "<what will the time be in the future>"
+     When the user says "<what time will it be in 8 hours>"
      Then "mycroft-date-time" should reply with dialog from "time.future.dialog"
 
   Examples: what's the future time
-    | what will the time be in the future |
     | what time will it be in 8 hours |
     | what time will it be 8 hours from now |
     | what's the time 8 hours from now |
