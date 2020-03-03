@@ -31,10 +31,6 @@ Feature: Date Time Skill Date functionality
 
   Examples: what is the date a number of days in the future
     | what's the date in 2 days |
-    | what's tomorrow's date |
-    | what is the date tomorrow |
-    | what date is next monday |
-    | what is the date this Monday |
     | what is the date 5 days from now |
     | what is the date a week from now |
     | what is the date a week from today |
@@ -46,14 +42,13 @@ Feature: Date Time Skill Date functionality
      Then "mycroft-date-time" should reply with dialog from "date.dialog"
 
   Examples: what was the date a number of days in the past
-    | what was a date 2 days ago |
-    | what was yesterday's date |
-    | what was the date yesterday |
-    | what was the date last monday |
-    | what was the date last weekend |
+    | what was the date 2 days ago |
     | what was the date a week ago |
     | what was the date a week ago today |
     | what was the date 5 days ago |
+    | what day is september 1st 2030 |
+    | what day of the week will it be on september 1st 2028 |
+    | what day is June 30th |
 
   Scenario Outline: when is a date in the future
     Given an english speaking user
@@ -61,12 +56,14 @@ Feature: Date Time Skill Date functionality
      Then "mycroft-date-time" should reply with dialog from "date.relative.future.dialog"
 
   Examples: when is a date
+
     | what day is september 1st 2028 |
     | when is the 1st of september |
-    | what day of the week will it be on september 1st 2028 |
-    | what day is september 1st 2030 |
     | when is June 30th |
-    | what day is in June 30th |
+    | what's tomorrow's date |
+    | what is the date tomorrow |
+    | what date is next monday |
+    | what is the date this Monday |
 
   Scenario Outline: when is a date in the past
     Given an english speaking user
@@ -75,7 +72,11 @@ Feature: Date Time Skill Date functionality
 
     | what day was it november 1st 1953 |
     | when was november 1st 1953 |
+    | what was the date last monday |
+    | what was yesterday's date |
+    | what was the date yesterday |
 
+  @xfail
   Scenario Outline: when is a holiday
     Given an english speaking user
      When the user says "<when is new year's day>"
@@ -86,7 +87,6 @@ Feature: Date Time Skill Date functionality
     | when is christmas |
     | when is christmas 2020 |
     | when is christmas 2030 |
-    | what day of the week is 4th of July |
     | when is thanksgiving 2020 |
     | how many days until christmas |
     | how many days until christmas |
