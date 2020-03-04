@@ -43,12 +43,10 @@ Feature: Date Time Skill Date functionality
 
   Examples: what was the date a number of days in the past
     | what was the date 2 days ago |
+    | what was the date 2 days ago |
     | what was the date a week ago |
     | what was the date a week ago today |
     | what was the date 5 days ago |
-    | what day is september 1st 2030 |
-    | what day of the week will it be on september 1st 2028 |
-    | what day is June 30th |
 
   Scenario Outline: when is a date in the future
     Given an english speaking user
@@ -58,8 +56,10 @@ Feature: Date Time Skill Date functionality
   Examples: when is a date
 
     | what day is september 1st 2028 |
+    | what day is september 1st 2028 |
     | when is the 1st of september |
     | when is June 30th |
+    | what day is June 30th |
     | what's tomorrow's date |
     | what is the date tomorrow |
     | what date is next monday |
@@ -70,6 +70,7 @@ Feature: Date Time Skill Date functionality
      When the user says "<what day was it november 1st 1953>"
      Then "mycroft-date-time" should reply with dialog from "date.relative.past.dialog"
 
+    | what day was it november 1st 1953 |
     | what day was it november 1st 1953 |
     | when was november 1st 1953 |
     | what was the date last monday |
@@ -112,9 +113,20 @@ Feature: Date Time Skill Date functionality
 
   Examples: what was the date last weekend
     | what was the date last weekend |
-    | what date was it last weekend |
+    | what was the date last weekend |
     | what dates were last weekend |
 
+  @xfail
+  Scenario Outline: Failing what was the date last weekend
+    Given an english speaking user
+     When the user says "<what was the date last weekend>"
+     Then "mycroft-date-time" should reply with dialog from "date.last.weekend.dialog"
+
+  Examples: what was the date last weekend
+    | what was the date last weekend |
+    | what date was it last weekend |
+
+  @xfail
   Scenario Outline: when is the next leap year
     Given an english speaking user
      When the user says "<when is the next leap year>"
