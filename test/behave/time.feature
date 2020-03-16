@@ -32,6 +32,7 @@ Feature: Date Time Skill Time functionality
     | what time |
 
   @xfail
+  # jira MS-99 https://mycroft.atlassian.net/browse/MS-99
   Scenario Outline: Failing what time is it
     Given an english speaking user
      When the user says "<what time is it>"
@@ -55,6 +56,7 @@ Feature: Date Time Skill Time functionality
     | what's the time in london |
 
   @xfail
+  # jira MS-100 https://mycroft.atlassian.net/browse/MS-100
   Scenario Outline: Failing what's the time in a location
     Given an english speaking user
      When the user says "<what is the time in a location>"
@@ -88,6 +90,7 @@ Feature: Date Time Skill Time functionality
     | what time will it be in 60 seconds |
 
   @xfail
+  # jira MS-101 https://mycroft.atlassian.net/browse/MS-101
   Scenario Outline: Failing what's the future time
     Given an english speaking user
      When the user says "<what time will it be in 8 hours>"
@@ -109,6 +112,7 @@ Feature: Date Time Skill Time functionality
      | what's the time in Los Angeles 8 hours from now |
 
   @xfail
+  # jira MS-102 https://mycroft.atlassian.net/browse/MS-102
   Scenario Outline: Failing what's the future time in a location
     Given an english speaking user
      When the user says "<what time will it be in the future in a location>"
