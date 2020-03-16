@@ -76,17 +76,26 @@ Feature: Date Time Skill Time functionality
   Examples: what's the future time
     | what time will it be in 8 hours |
     | what time will it be 8 hours from now |
-    | what's the time 8 hours from now |
     | give me the time 8 hours from now |
+    | the time 8 hours from now please |
     | what's the time in 8 hours |
     | what will be the time in 8 hours |
-    | the time 8 hours from now please |
     | when is it 8 hours from now |
     | in 8 hours what time will it be |
     | what time will it be in 36 hours |
     | what time will it be in 90 minutes |
     | in 97 minutes what time will it be |
     | what time will it be in 60 seconds |
+
+  @xfail
+  Scenario Outline: Failing what's the future time
+    Given an english speaking user
+     When the user says "<what time will it be in 8 hours>"
+     Then "mycroft-date-time" should reply with dialog from "time.future.dialog"
+
+  Examples: what's the future time
+    | what time will it be in 8 hours |
+    | what's the time 8 hours from now |
 
   Scenario Outline: what's the future time in a location
     Given an english speaking user

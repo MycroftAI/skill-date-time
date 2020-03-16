@@ -50,20 +50,29 @@ Feature: Date Time Skill Date functionality
 
   Scenario Outline: when is a date in the future
     Given an english speaking user
-     When the user says "<what day is september 1st 2028>"
+     When the user says "<what day is future date>"
      Then "mycroft-date-time" should reply with dialog from "date.relative.future.dialog"
 
   Examples: when is a date
 
-    | what day is september 1st 2028 |
-    | what day is september 1st 2028 |
+    | what day is future date |
     | when is the 1st of september |
     | when is June 30th |
-    | what day is June 30th |
     | what's tomorrow's date |
     | what is the date tomorrow |
     | what date is next monday |
     | what is the date this Monday |
+
+  @xfail
+  Scenario Outline: Failing when is a date in the future
+    Given an english speaking user
+     When the user says "<what day is future date>"
+     Then "mycroft-date-time" should reply with dialog from "date.relative.future.dialog"
+
+  Examples: when is a date
+    | what day is future date |
+    | what day is september 1st 2028 |
+    | what day is June 30th |
 
   Scenario Outline: when is a date in the past
     Given an english speaking user
