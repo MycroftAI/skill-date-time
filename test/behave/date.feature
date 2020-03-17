@@ -64,6 +64,7 @@ Feature: Date Time Skill Date functionality
     | what is the date this Monday |
 
   @xfail
+  # Jira 103 https://mycroft.atlassian.net/browse/MS-103
   Scenario Outline: Failing when is a date in the future
     Given an english speaking user
      When the user says "<what day is future date>"
@@ -87,6 +88,7 @@ Feature: Date Time Skill Date functionality
     | what was the date yesterday |
 
   @xfail
+  # Jira 104 https://mycroft.atlassian.net/browse/MS-105
   Scenario Outline: when is a holiday
     Given an english speaking user
      When the user says "<when is new year's day>"
@@ -126,6 +128,7 @@ Feature: Date Time Skill Date functionality
     | what dates were last weekend |
 
   @xfail
+  # Jira 106 https://mycroft.atlassian.net/browse/MS-106
   Scenario Outline: Failing what was the date last weekend
     Given an english speaking user
      When the user says "<what was the date last weekend>"
@@ -136,6 +139,7 @@ Feature: Date Time Skill Date functionality
     | what date was it last weekend |
 
   @xfail
+  # Jira 107 https://mycroft.atlassian.net/browse/MS-107
   Scenario Outline: when is the next leap year
     Given an english speaking user
      When the user says "<when is the next leap year>"
