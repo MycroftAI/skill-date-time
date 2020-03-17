@@ -64,11 +64,21 @@ Feature: Date Time Skill Time functionality
 
   Examples: what time examples
     | what is the time in a location |
-    | what's the time in washington |
     | check the time in Washington DC |
     | what's the current time in Italy |
     | what's the time in russia |
     | what time is it in washington |
+
+  Scenario Outline: What's the time in a location when Mycroft needs more information
+    Given an english speaking user
+    When the user says "<what is the time in a location that needs more information>"
+    Then "mycroft-date-time" should reply with dialog from "did.you.mean.timezone.dialog"
+    Then the user says "<yes>"
+
+    | what is the time in a location that needs more information | yes |
+    | what's the time in washington | yes |
+    | what time is it in washington | no |
+    | what is the time in washington | nevermind |
 
   Scenario Outline: what's the future time
     Given an english speaking user
