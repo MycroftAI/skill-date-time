@@ -478,9 +478,9 @@ class TimeSkill(MycroftSkill):
 
         speak_date = nice_date(day, lang=self.lang)
         # speak it
-        if response_type is "simple":
+        if response_type == "simple":
             self.speak_dialog("date", {"date": speak_date})
-        elif response_type is "relative":
+        elif response_type == "relative":
             # remove time data to get clean dates
             day_date = day.replace(hour=0, minute=0,
                                    second=0, microsecond=0)
