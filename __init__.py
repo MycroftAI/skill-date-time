@@ -17,7 +17,7 @@ import holidays
 import pytz
 import re
 import time
-from astral import Astral
+from astral import geocoder
 
 import mycroft.audio
 from adapt.intent import IntentBuilder
@@ -51,7 +51,6 @@ class TimeSkill(MycroftSkill):
 
     def __init__(self):
         super(TimeSkill, self).__init__("TimeSkill")
-        self.astral = Astral()
         self.displayed_time = None
         self.display_tz = None
         self.answering_query = False
@@ -100,7 +99,8 @@ class TimeSkill(MycroftSkill):
     def _get_timezone_from_builtins(self, locale):
         try:
             # This handles common city names, like "Dallas" or "Paris"
-            return pytz.timezone(self.astral[locale].timezone)
+            return pytz.timezone(geocoder.lookup(locale, geocoder.database())
+                                         .timezone)
         except Exception:
             pass
 

@@ -1,4 +1,4 @@
 pytz==2017.2
 tzlocal==1.3
-astral==1.4
+astral>=2.1
 holidays
