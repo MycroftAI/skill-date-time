@@ -17,7 +17,7 @@ import holidays
 import pytz
 import re
 import time
-from astral import Astral
+from astral import geocoder
 
 import mycroft.audio
 from adapt.intent import IntentBuilder
@@ -51,7 +51,6 @@ class TimeSkill(MycroftSkill):
 
     def __init__(self):
         super(TimeSkill, self).__init__("TimeSkill")
-        self.astral = Astral()
         self.displayed_time = None
         self.display_tz = None
         self.answering_query = False
@@ -110,7 +109,8 @@ class TimeSkill(MycroftSkill):
     def _get_timezone_from_builtins(self, locale):
         try:
             # This handles common city names, like "Dallas" or "Paris"
-            return pytz.timezone(self.astral[locale].timezone)
+            return pytz.timezone(geocoder.lookup(locale, geocoder.database())
+                                         .timezone)
         except Exception:
             pass
 
@@ -499,9 +499,9 @@ class TimeSkill(MycroftSkill):
 
         speak_date = nice_date(day, lang=self.lang)
         # speak it
-        if response_type is "simple":
+        if response_type == "simple":
             self.speak_dialog("date", {"date": speak_date})
-        elif response_type is "relative":
+        elif response_type == "relative":
             # remove time data to get clean dates
             day_date = day.replace(hour=0, minute=0,
                                    second=0, microsecond=0)
@@ -576,9 +576,9 @@ class TimeSkill(MycroftSkill):
         # Don't pass `now` to `nice_date` as a
         # request on Monday will return "yesterday"
         saturday_date = ', '.join(nice_date(extract_datetime(
-                        'this saturday')[0]).split(', ')[:2])
+                        'last saturday')[0]).split(', ')[:2])
         sunday_date = ', '.join(nice_date(extract_datetime(
-                      'this sunday')[0]).split(', ')[:2])
+                      'last sunday')[0]).split(', ')[:2])
         self.speak_dialog('date.last.weekend', {
             'direction': 'last',
             'saturday_date': saturday_date,
