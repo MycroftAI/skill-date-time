@@ -27,7 +27,7 @@ from mycroft import MycroftSkill, intent_handler, intent_file_handler
 from mycroft.util.parse import (extract_datetime, fuzzy_match, extract_number,
                                 normalize)
 from mycroft.util.time import now_utc, to_local, now_local
-from mycroft.skills.core import resting_screen_handler
+from mycroft.skills import resting_screen_handler
 
 
 def speakable_timezone(tz):
