@@ -17,7 +17,8 @@ import holidays
 import pytz
 import re
 import time
-from astral import geocoder
+from timezonefinder import TimezoneFinder
+import geocoder
 
 import mycroft.audio
 from adapt.intent import IntentBuilder
@@ -99,8 +100,13 @@ class TimeSkill(MycroftSkill):
     def _get_timezone_from_builtins(self, locale):
         try:
             # This handles common city names, like "Dallas" or "Paris"
-            return pytz.timezone(geocoder.lookup(locale, geocoder.database())
-                                         .timezone)
+            # first get the lat / long.
+            g = geocoder.osm(locale)
+            
+            # now look it up
+            tf = TimezoneFinder()
+            timezone = tf.timezone_at(lng=g.lng, lat=g.lat)
+            return pytz.timezone(timezone)
         except Exception:
             pass
 
