@@ -55,6 +55,7 @@ class TimeSkill(MycroftSkill):
         self.displayed_time = None
         self.display_tz = None
         self.answering_query = False
+        self.default_timezone = None
 
     def initialize(self):
         # Start a callback that repeats every 10 seconds
@@ -175,13 +176,23 @@ class TimeSkill(MycroftSkill):
         """Get the timezone.
 
         This uses a variety of approaches to determine the intended timezone.
+        If locale is the user defined locale, we save that timezone and cache it.
         """
+        
+        # default timezone exisits, so return it.
+        if self.default_timezone:
+            return self.default_timezone
+
+        # no default timezone has either been requested or saved
         timezone = self._get_timezone_from_builtins(locale)
         if not timezone:
             timezone = self._get_timezone_from_table(locale)
         if not timezone:
             timezone = self._get_timezone_from_fuzzymatch(locale)
 
+        # if the current request is our default timezone, save it.         
+        if locale == self.location_timezone:
+            self.default_timezone = timezone
         return timezone
 
     def get_local_datetime(self, location, dtUTC=None):
