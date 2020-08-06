@@ -179,8 +179,8 @@ class TimeSkill(MycroftSkill):
         If locale is the user defined locale, we save that timezone and cache it.
         """
         
-        # default timezone exisits, so return it.
-        if self.default_timezone:
+        # default timezone exists, so return it.
+        if self.default_timezone and locale == self.location_timezone:
             return self.default_timezone
 
         # no default timezone has either been requested or saved
