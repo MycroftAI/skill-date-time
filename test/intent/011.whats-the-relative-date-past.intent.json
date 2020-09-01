@@ -1,9 +1,7 @@
 {
   "utterance": "what was the date last tuesday",
-  "intent_type": "handle_query_relative_date",
   "intent": {
-    "RelativeDay": "tuesday",
-    "Query": "what"
+    "RelativeDay": "tuesday"
   },
   "expected_dialog": "date.relative.past"
 }
