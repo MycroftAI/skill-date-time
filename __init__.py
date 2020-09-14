@@ -244,6 +244,11 @@ class TimeSkill(MycroftSkill):
         # HACK: Mimic 2 has a bug with saying "AM".  Work around it for now.
         if say_am_pm:
             s = s.replace("AM", "A.M.")
+
+        # HACK: lingua_franca doesn't support Polish yet.
+        if self.lang.lower()=="pl-pl": # 2020-09-14 19:22:02.620284+02:00
+            s = s[11:19]
+
         return s
 
     def display(self, display_time):
@@ -376,6 +381,7 @@ class TimeSkill(MycroftSkill):
     @intent_handler(IntentBuilder("").require("Query").require("Time").
                     optionally("Location"))
     def handle_query_time(self, message):
+        self.log.info("------------------------------>czas")
         utt = message.data.get('utterance', "")
         location = self._extract_location(utt)
         current_time = self.get_spoken_current_time(location)
@@ -455,6 +461,7 @@ class TimeSkill(MycroftSkill):
     # Date queries
 
     def handle_query_date(self, message, response_type="simple"):
+        self.log.info("------------------------------>data")
         utt = message.data.get('utterance', "").lower()
         try:
             extract = extract_datetime(utt)
