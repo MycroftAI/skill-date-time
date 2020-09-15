@@ -1,13 +1,12 @@
-what (time will it|will the time) be (in|) {offset} (hours|minutes|seconds) (from now|)
-what (time will it|will the time) be (in|) {offset} (hours|minutes|seconds) (from now|) in {location}
-(what is|what's|what will be) the time in {offset} (hours|minutes|seconds) (from now|)
-(what is|what's|what will be) the time in {offset} (hours|minutes|seconds) (from now|) in {location}
-(give|tell) me the time (in|) {offset} (hours|minutes|seconds) (from now|)
-(give|tell) me the time (in|) {offset} (hours|minutes|seconds) (from now|) in {location}
-(in|) {offset} (hours|minutes|seconds) what (time will it be|will the time be)
-(in|) {offset} (hours|minutes|seconds) (from now|) what (time will it be|will the time be) (at|in|for) {location}
-when is it {offset} (hours|minutes|seconds) (from now|)
-when is it {offset} (hours|minutes|seconds) (from now|) in {location}
-what time (will it be|is it) in {location} (in|) {offset} (hours|minutes|seconds) (from now|)
-(what is|what's|what will be) the time in {location} in {offset} (hours|minutes|seconds) (from now!)
-(at|in|for) {location} what (time will it be|will the time be) (in|) {offset} (hours|minutes|seconds)
+(która|jaka|jaki) (będzie|jest) (czas|godzina) za {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|)
+(która|jaka|jaki) (będzie|jest) (czas|godzina) za {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|) (w|we) {location}
+(która|jaka|jaki) (godzina|czas) (będzie|jest) za {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|)
+(która|jaka|jaki) (godzina|czas) (będzie|jest) za {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|) (w|we) {location}
+(podaj|powiedz) (godzinę|czas) za {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|)
+(podaj|powiedz) (godzinę|czas) za {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|) (w|we) {location
+(o której|kiedy) (minie|miną) {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|)
+(o której|kiedy) (minie|miną) {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|) (w|we) {location}
+(za|) {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|) (która|jaka|jaki) (będzie|jest) (czas|godzina)
+(za|) {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|) (która|jaka|jaki) (będzie|jest) (czas|godzina) (w|we) {location}
+(która|jaka|jaki) (będzie|jest) (czas|godzina) (w|we) {location} (za|) {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|)
+(w|we) {location} (która|jaka|jaki) (będzie|jest) (czas|godzina) (za|) {offset} (godzin|godziny|minut|minuty|sekund|sekundy)( od teraz|)

@@ -245,10 +245,6 @@ class TimeSkill(MycroftSkill):
         if say_am_pm:
             s = s.replace("AM", "A.M.")
 
-        # HACK: lingua_franca doesn't support Polish yet.
-        if self.lang.lower()=="pl-pl": # 2020-09-14 19:22:02.620284+02:00
-            s = s[11:19]
-
         return s
 
     def display(self, display_time):
@@ -381,7 +377,6 @@ class TimeSkill(MycroftSkill):
     @intent_handler(IntentBuilder("").require("Query").require("Time").
                     optionally("Location"))
     def handle_query_time(self, message):
-        self.log.info("------------------------------>czas")
         utt = message.data.get('utterance', "")
         location = self._extract_location(utt)
         current_time = self.get_spoken_current_time(location)
@@ -410,6 +405,7 @@ class TimeSkill(MycroftSkill):
     def handle_query_future_time(self, message):
         utt = normalize(message.data.get('utterance', "").lower())
         extract = extract_datetime(utt)
+        dt = None
         if extract:
             dt = extract[0]
             utt = extract[1]
@@ -461,7 +457,6 @@ class TimeSkill(MycroftSkill):
     # Date queries
 
     def handle_query_date(self, message, response_type="simple"):
-        self.log.info("------------------------------>data")
         utt = message.data.get('utterance', "").lower()
         try:
             extract = extract_datetime(utt)
@@ -564,9 +559,9 @@ class TimeSkill(MycroftSkill):
         # Don't pass `now` to `nice_date` as a
         # request on Friday will return "tomorrow"
         saturday_date = ', '.join(nice_date(extract_datetime(
-                        'this saturday')[0]).split(', ')[:2])
+                        'this saturday', None, 'en-us')[0]).split(', ')[:2])
         sunday_date = ', '.join(nice_date(extract_datetime(
-                      'this sunday')[0]).split(', ')[:2])
+                      'this sunday', None, 'en-us')[0]).split(', ')[:2])
         self.speak_dialog('date.future.weekend', {
             'direction': 'next',
             'saturday_date': saturday_date,
@@ -579,9 +574,9 @@ class TimeSkill(MycroftSkill):
         # Don't pass `now` to `nice_date` as a
         # request on Monday will return "yesterday"
         saturday_date = ', '.join(nice_date(extract_datetime(
-                        'last saturday')[0]).split(', ')[:2])
+                        'last saturday', None, 'en-us')[0]).split(', ')[:2])
         sunday_date = ', '.join(nice_date(extract_datetime(
-                      'last sunday')[0]).split(', ')[:2])
+                      'last sunday', None, 'en-us')[0]).split(', ')[:2])
         self.speak_dialog('date.last.weekend', {
             'direction': 'last',
             'saturday_date': saturday_date,
