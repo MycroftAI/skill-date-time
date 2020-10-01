@@ -9,7 +9,7 @@ Time Format setting at [Home](https://home.mycroft.ai/#/setting/basic)
 Time can optionally be shown on a display, like a digital clock.  See
 the [Skill Setting](https://home.mycroft.ai/#/skill).
 
-## Examples 
+## Instances
 * "What time is it?"
 * "What time is it in Paris?"
 * "Show me the time"
