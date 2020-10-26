@@ -24,7 +24,7 @@ import mycroft.audio
 from adapt.intent import IntentBuilder
 from mycroft.util.format import nice_date, nice_duration, nice_time
 from mycroft.messagebus.message import Message
-from mycroft import MycroftSkill, intent_handler, intent_file_handler
+from mycroft import MycroftSkill, intent_handler
 from mycroft.util.parse import (extract_datetime, fuzzy_match, extract_number,
                                 normalize)
 from mycroft.util.time import now_utc, to_local, now_local
@@ -400,7 +400,7 @@ class TimeSkill(MycroftSkill):
     def handle_current_time_simple(self, message):
         self.handle_query_time(message)
 
-    @intent_file_handler("what.time.will.it.be.intent")
+    @intent_handler("what.time.will.it.be.intent")
     def handle_query_future_time(self, message):
         utt = normalize(message.data.get('utterance', "").lower())
         extract = extract_datetime(utt)
@@ -551,7 +551,7 @@ class TimeSkill(MycroftSkill):
         else:
             self.handle_query_date(message, response_type="relative")
 
-    @intent_file_handler("date.future.weekend.intent")
+    @intent_handler("date.future.weekend.intent")
     def handle_date_future_weekend(self, message):
         # Strip year off nice_date as request is inherently close
         # Don't pass `now` to `nice_date` as a
@@ -566,7 +566,7 @@ class TimeSkill(MycroftSkill):
             'sunday_date': sunday_date
         })
 
-    @intent_file_handler("date.last.weekend.intent")
+    @intent_handler("date.last.weekend.intent")
     def handle_date_last_weekend(self, message):
         # Strip year off nice_date as request is inherently close
         # Don't pass `now` to `nice_date` as a
