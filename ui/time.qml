@@ -17,7 +17,7 @@ Mycroft.Delegate {
         columns: horizontalMode ? 3 : 1
 
         Item {
-            Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
+            Layout.alignment: horizontalMode && hour.text.length > 1 ? Qt.AlignTop | Qt.AlignRight : Qt.AlignTop | Qt.AlignHCenter
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.margins: Kirigami.Units.smallSpacing
@@ -31,11 +31,20 @@ Mycroft.Delegate {
                 font.bold: true
                 font.weight: Font.Bold
                 font.pixelSize: horizontalMode ? parent.width : parent.height
-                horizontalAlignment: Text.AlignHCenter
+                horizontalAlignment: horizontalMode ? Text.AlignRight : Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                text: sessionData.time_string.split(":")[0]
                 color: "white"
                 renderType: height > 40 ? Text.QtRendering : (Screen.devicePixelRatio % 1 !== 0 ? Text.QtRendering : Text.NativeRendering)
+                
+                Component.onCompleted: {
+                    var setHour = sessionData.time_string.split(":")[0]
+                    if(setHour.length == 1 && horizontalMode) {
+                        setHour = "  " + setHour
+                        hour.text = setHour
+                    } else {
+                        hour.text = setHour
+                    }
+                }
             }
         }
         
@@ -65,7 +74,7 @@ Mycroft.Delegate {
         }        
         
         Item {
-            Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
+            Layout.alignment: horizontalMode && minute.text.length > 1 ? Qt.AlignTop | Qt.AlignLeft : Qt.AlignTop | Qt.AlignHCenter
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.margins: Kirigami.Units.smallSpacing
@@ -79,11 +88,20 @@ Mycroft.Delegate {
                 font.bold: false
                 font.weight: Font.Normal
                 font.pixelSize: horizontalMode ? parent.width : parent.height
-                horizontalAlignment: Text.AlignHCenter
+                horizontalAlignment: horizontalMode ? Text.AlignLeft : Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                text: sessionData.time_string.split(":")[1]
                 color: "#22A7F0"
                 renderType: height > 40 ? Text.QtRendering : (Screen.devicePixelRatio % 1 !== 0 ? Text.QtRendering : Text.NativeRendering)
+                
+                Component.onCompleted: {
+                    var setMin = sessionData.time_string.split(":")[1]
+                    if(setMin.length == 1 && horizontalMode) {
+                        setMin = setMin + "  "
+                        minute.text = setMin
+                    } else {
+                        minute.text = setMin
+                    }
+                }
             }
         }
     }
