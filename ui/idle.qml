@@ -7,7 +7,7 @@ import Mycroft 1.0 as Mycroft
 
 Mycroft.Delegate {
     background: Image {
-        source: Qt.resolvedUrl("img/nasa.png")
+        source: Qt.resolvedUrl("img/idle-background.png")
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
     }
