@@ -10,6 +10,8 @@ Mycroft.Delegate {
         id: grid
         Layout.fillWidth: true
         anchors.centerIn: parent
+
+        /* Put the day of the week at the top of the screen */
         Label {
             id: weekday
             Layout.alignment: Qt.AlignHCenter
@@ -22,13 +24,18 @@ Mycroft.Delegate {
             text: sessionData.weekday_string
             color: "white"
         }
+
+        /* Add some spacing between the day of week and the calendar graphic */
         Item {
             height: Kirigami.Units.largeSpacing
         }
+
+        /* Calendar graphic */
         Image {
             id: image
             source: Qt.resolvedUrl("img/date-bg.svg")
 
+            /*  The top part of the calendar graphic containing the month */
             Image {
                 id: calendartop
                 x: 0
@@ -48,6 +55,8 @@ Mycroft.Delegate {
                     color: "white"
                 }
             }
+
+            /* The day of the month goes in the calendar graphic under the month */
             Label {
                 id: date
                 anchors.centerIn: parent
