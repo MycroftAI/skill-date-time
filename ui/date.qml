@@ -13,22 +13,22 @@ Mycroft.Delegate {
         Label {
             id: weekday
             Layout.alignment: Qt.AlignHCenter
-            font.pixelSize: 40
+            font.pixelSize: 65
             wrapMode: Text.WordWrap
             renderType: Text.NativeRendering
             font.family: "Noto Sans Display"
             font.styleName: "Black"
-            font.capitalization: Font.SmallCaps
-            text: sessionData.weekday_string.toLowerCase()
+            font.capitalization: Font.AllUppercase
+            text: sessionData.weekday_string
             color: "white"
-        } 
+        }
         Item {
-            height: Kirigami.Units.largeSpacing * 2
+            height: Kirigami.Units.largeSpacing
         }
         Image {
             id: image
             source: Qt.resolvedUrl("img/date-bg.svg")
-            
+
             Image {
                 id: calendartop
                 x: 0
@@ -40,7 +40,7 @@ Mycroft.Delegate {
                 Label {
                     id: month
                     anchors.centerIn: parent
-                    font.pixelSize: 40
+                    font.pixelSize: 60
                     wrapMode: Text.WordWrap
                     font.family: "Noto Sans Display"
                     font.bold: true
@@ -52,8 +52,7 @@ Mycroft.Delegate {
                 id: date
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: calendartop.height / 2
-
-                font.pixelSize: 250
+                font.pixelSize: 230
                 wrapMode: Text.WordWrap
                 font.family: "Noto Sans Display"
                 font.bold: true
