@@ -74,7 +74,6 @@ Mycroft.Delegate {
                     height: parent.height
                     visible: horizontalMode ? 1 : 0
                     enabled: horizontalMode ? 1 : 0
-                    color: "transparent"
                 }
 
                 Item {
