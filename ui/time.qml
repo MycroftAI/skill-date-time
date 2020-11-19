@@ -30,10 +30,11 @@ Mycroft.Delegate {
         anchors.fill: parent
         anchors.margins: horizontalMode ? timeRoot.height * 0.30 : timeRoot.height * 0.15
         
-        Item {
+        Rectangle {
             id: rectGrid
             implicitWidth: parent.width
             implicitHeight: parent.height
+            color: "transparent"
 
             GridLayout {
                 id: gridtype
@@ -41,10 +42,11 @@ Mycroft.Delegate {
                 anchors.centerIn: parent
                 columns: horizontalMode ? 3 : 1
 
-                Item {
+                Rectangle {
                     Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                     Layout.preferredWidth: horizontalMode && hourText.length == 1 ? timeRoot.horizontalFontWidth / 2 : timeRoot.horizontalFontWidth
                     Layout.fillHeight: true
+                    color: "transparent"
 
                     Label {
                         id: hour
@@ -54,14 +56,20 @@ Mycroft.Delegate {
                         font.family: "Noto Sans"
                         font.bold: true
                         font.weight: Font.Bold
-                        font.pixelSize: horizontalMode ? timeRoot.horizontalFontWidth : parent.height * 1.1
+                        font.pixelSize: horizontalMode ? timeRoot.horizontalFontWidth : parent.height
                         horizontalAlignment: horizontalMode ? Text.AlignRight : Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         color: "white"
                         renderType: height > 40 ? Text.QtRendering : (Screen.devicePixelRatio % 1 !== 0 ? Text.QtRendering : Text.NativeRendering)
 
                         Component.onCompleted: {
-                            hour.text = hourText
+                            var setHour
+                            if(hourText.length == 1 && horizontalMode) {
+                                setHour = setHour + "  "
+                                hour.text = setHour
+                            } else {
+                                hour.text = hourText
+                            }
                         }
                     }
                 }
@@ -76,9 +84,10 @@ Mycroft.Delegate {
                     enabled: horizontalMode ? 1 : 0
                 }
 
-                Item {
+                Rectangle {
                     Layout.preferredWidth: timeRoot.horizontalFontWidth
                     Layout.fillHeight: true
+                    color: "transparent"
 
                     Label {
                         id: minute
@@ -88,14 +97,20 @@ Mycroft.Delegate {
                         font.family: "Noto Sans"
                         font.bold: false
                         font.weight: Font.Normal
-                        font.pixelSize: horizontalMode ? timeRoot.horizontalFontWidth : parent.height * 1.1
+                        font.pixelSize: horizontalMode ? timeRoot.horizontalFontWidth : parent.height
                         horizontalAlignment: horizontalMode ? Text.AlignLeft : Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         color: "#22A7F0"
                         renderType: height > 40 ? Text.QtRendering : (Screen.devicePixelRatio % 1 !== 0 ? Text.QtRendering : Text.NativeRendering)
 
                         Component.onCompleted: {
-                            minute.text = minuteText
+                            var setMin
+                            if(minuteText.length == 1 && horizontalMode) {
+                                setMin = setMin + "  "
+                                minute.text = setMin
+                            } else {
+                                minute.text = minuteText
+                            }
                         }
                     }
                 }
