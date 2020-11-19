@@ -95,8 +95,8 @@ Mycroft.Delegate {
                         height: parent.height
                         font.capitalization: Font.AllUppercase
                         font.family: "Noto Sans"
-                        font.bold: false
-                        font.weight: Font.Normal
+                        font.bold: true
+                        font.weight: Font.Bold
                         font.pixelSize: horizontalMode ? timeRoot.horizontalFontWidth : parent.height
                         horizontalAlignment: horizontalMode ? Text.AlignLeft : Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
