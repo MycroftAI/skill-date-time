@@ -1,1 +1,1 @@
-(au|pour|en) (?P<Location>.*)
+\b(au|pour|en) (?P<Location>.*)
