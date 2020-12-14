@@ -561,7 +561,6 @@ class TimeSkill(MycroftSkill):
         sunday_date = ', '.join(nice_date(extract_datetime(
                       'this sunday')[0]).split(', ')[:2])
         self.speak_dialog('date.future.weekend', {
-            'direction': 'next',
             'saturday_date': saturday_date,
             'sunday_date': sunday_date
         })
@@ -576,7 +575,6 @@ class TimeSkill(MycroftSkill):
         sunday_date = ', '.join(nice_date(extract_datetime(
                       'last sunday')[0]).split(', ')[:2])
         self.speak_dialog('date.last.weekend', {
-            'direction': 'last',
             'saturday_date': saturday_date,
             'sunday_date': sunday_date
         })
