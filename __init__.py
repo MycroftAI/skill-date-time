@@ -244,6 +244,7 @@ class TimeSkill(MycroftSkill):
         # HACK: Mimic 2 has a bug with saying "AM".  Work around it for now.
         if say_am_pm:
             s = s.replace("AM", "A.M.")
+
         return s
 
     def display(self, display_time):
@@ -404,6 +405,7 @@ class TimeSkill(MycroftSkill):
     def handle_query_future_time(self, message):
         utt = normalize(message.data.get('utterance', "").lower())
         extract = extract_datetime(utt)
+        dt = None
         if extract:
             dt, utt = extract
         else:
@@ -560,9 +562,9 @@ class TimeSkill(MycroftSkill):
         # Don't pass `now` to `nice_date` as a
         # request on Friday will return "tomorrow"
         saturday_date = ', '.join(nice_date(extract_datetime(
-                        'this saturday')[0]).split(', ')[:2])
+                        'this saturday', None, 'en-us')[0]).split(', ')[:2])
         sunday_date = ', '.join(nice_date(extract_datetime(
-                      'this sunday')[0]).split(', ')[:2])
+                      'this sunday', None, 'en-us')[0]).split(', ')[:2])
         self.speak_dialog('date.future.weekend', {
             'saturday_date': saturday_date,
             'sunday_date': sunday_date
@@ -574,9 +576,9 @@ class TimeSkill(MycroftSkill):
         # Don't pass `now` to `nice_date` as a
         # request on Monday will return "yesterday"
         saturday_date = ', '.join(nice_date(extract_datetime(
-                        'last saturday')[0]).split(', ')[:2])
+                        'last saturday', None, 'en-us')[0]).split(', ')[:2])
         sunday_date = ', '.join(nice_date(extract_datetime(
-                      'last sunday')[0]).split(', ')[:2])
+                      'last sunday', None, 'en-us')[0]).split(', ')[:2])
         self.speak_dialog('date.last.weekend', {
             'saturday_date': saturday_date,
             'sunday_date': sunday_date
