@@ -405,8 +405,11 @@ class TimeSkill(MycroftSkill):
         utt = normalize(message.data.get('utterance', "").lower())
         extract = extract_datetime(utt)
         if extract:
-            dt = extract[0]
-            utt = extract[1]
+            dt, utt = extract
+        else:
+            self.handle_query_time(message)
+            return
+
         location = self._extract_location(utt)
         future_time = self.get_spoken_current_time(location, dt, True)
         if not future_time:

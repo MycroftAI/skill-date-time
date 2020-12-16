@@ -54,6 +54,7 @@ Feature: Date Time Skill Time functionality
     | what is the time in a location |
     | what's the time in paris |
     | what's the time in london |
+    | time in Toronto |
 
   @xfail
   # jira MS-100 https://mycroft.atlassian.net/browse/MS-100
