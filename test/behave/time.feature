@@ -54,7 +54,6 @@ Feature: Date Time Skill Time functionality
     | what is the time in a location |
     | what's the time in paris |
     | what's the time in london |
-    | time in Toronto |
 
   @xfail
   # jira MS-100 https://mycroft.atlassian.net/browse/MS-100
@@ -69,6 +68,7 @@ Feature: Date Time Skill Time functionality
     | what's the current time in Italy |
     | what's the time in russia |
     | what time is it in washington |
+    | time in Toronto |
 
   Scenario Outline: What's the time in a location when Mycroft needs more information
     Given an english speaking user
