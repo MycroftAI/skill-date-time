@@ -92,6 +92,11 @@ class TimeSkill(MycroftSkill):
         self.gui['weekday_string'] = self.get_weekday()
         self.gui['month_string'] = self.get_month_date()
         self.gui['year_string'] = self.get_year()
+        timestamp_file = "build-timestamp.txt"
+        if (self.config_core["enclosure"].get("development_device")
+            and self.file_system.exists(timestamp_file)):
+            with self.file_system.open(timestamp_file, "r") as timestamp:
+                self.gui['build_date'] = timestamp.read()
         self.gui.show_page('idle.qml')
 
     @property

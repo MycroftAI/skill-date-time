@@ -56,4 +56,19 @@ Mycroft.Delegate {
             color: "white"
         }
     }
+    Label {
+        id: buildDate
+        visible: sessionDate.build_date === "" ? 1 : 0
+        enabled: sessionData.build_date === "" ? 1 : 0
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 20
+        font.pixelSize: 16
+        wrapMode: Text.WordWrap
+        font.family: "Noto Sans Display"
+        lineHeight: 0.6
+        text: sessionData.build_date
+        color: "white"
+    }
+
 }
