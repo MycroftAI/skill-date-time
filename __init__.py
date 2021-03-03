@@ -99,17 +99,18 @@ class TimeSkill(MycroftSkill):
         return self.config_core.get('time_format') == 'full'
 
     def _get_timezone_from_builtins(self, locale):
-        try:
-            # This handles common city names, like "Dallas" or "Paris"
-            # first get the lat / long.
-            g = geocoder.osm(locale)
-            
-            # now look it up
-            tf = TimezoneFinder()
-            timezone = tf.timezone_at(lng=g.lng, lat=g.lat)
-            return pytz.timezone(timezone)
-        except Exception:
-            pass
+        if "/" not in locale:
+            try:
+                # This handles common city names, like "Dallas" or "Paris"
+                # first get the lat / long.
+                g = geocoder.osm(locale)
+
+                # now look it up
+                tf = TimezoneFinder()
+                timezone = tf.timezone_at(lng=g.lng, lat=g.lat)
+                return pytz.timezone(timezone)
+            except Exception:
+                pass
 
         try:
             # This handles codes like "America/Los_Angeles"
