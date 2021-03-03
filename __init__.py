@@ -14,9 +14,11 @@
 
 import datetime
 import holidays
+import json
 import pytz
 import re
 import time
+from pathlib import Path
 from timezonefinder import TimezoneFinder
 import geocoder
 
@@ -92,7 +94,19 @@ class TimeSkill(MycroftSkill):
         self.gui['weekday_string'] = self.get_weekday()
         self.gui['month_string'] = self.get_month_date()
         self.gui['year_string'] = self.get_year()
+        self.gui['build_date'] = self.build_info.get('build_date', '')
         self.gui.show_page('idle.qml')
+
+    @property
+    def build_info(self):
+        """The /etc/mycroft/build-info.json file as a Dict."""
+        data = {}
+        filename = "/etc/mycroft/build-info.json"
+        if (self.config_core["enclosure"].get("development_device")
+            and Path(filename).is_file()):
+            with open(filename, 'r') as build_info:
+                data = json.loads(build_info.read())
+        return data
 
     @property
     def use_24hour(self):
