@@ -58,7 +58,7 @@ Mycroft.Delegate {
     }
     Label {
         id: buildDate
-        visible: sessionDate.build_date === "" ? 1 : 0
+        visible: sessionData.build_date === "" ? 1 : 0
         enabled: sessionData.build_date === "" ? 1 : 0
         anchors.right: parent.right
         anchors.bottom: parent.bottom
