@@ -58,12 +58,12 @@ Mycroft.Delegate {
     }
     Label {
         id: buildDate
-        visible: sessionData.build_date === "" ? 1 : 0
-        enabled: sessionData.build_date === "" ? 1 : 0
-        anchors.right: parent.right
+        visible: sessionData.build_date === "" ? 0 : 1
+        enabled: sessionData.build_date === "" ? 0 : 1
+        anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.margins: 20
-        font.pixelSize: 16
+        font.pixelSize: 20
         wrapMode: Text.WordWrap
         font.family: "Noto Sans Display"
         lineHeight: 0.6
