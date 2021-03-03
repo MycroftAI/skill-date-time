@@ -18,7 +18,7 @@ import json
 import pytz
 import re
 import time
-from os.path import isfile
+from pathlib import Path
 from timezonefinder import TimezoneFinder
 import geocoder
 
@@ -103,7 +103,7 @@ class TimeSkill(MycroftSkill):
         data = {}
         filename = "/etc/mycroft/build-info.json"
         if (self.config_core["enclosure"].get("development_device")
-            and isfile(filename)):
+            and Path(filename).is_file()):
             with open(filename, 'r') as build_info:
                 data = json.loads(build_info.read())
         return data
