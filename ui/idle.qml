@@ -26,6 +26,7 @@ Mycroft.Delegate {
             color: "white"
             lineHeight: 0.6
             text: sessionData.time_string.replace(":", "꞉")
+            style: Text.Outline; styleColor: "black"
         }
         Item {
             height: Kirigami.Units.largeSpacing * 5
@@ -40,6 +41,7 @@ Mycroft.Delegate {
             lineHeight: 0.6
             text: sessionData.weekday_string
             color: "white"
+            style: Text.Outline; styleColor: "black"
         }
         Item {
             height: Kirigami.Units.largeSpacing * 3
@@ -54,6 +56,7 @@ Mycroft.Delegate {
             lineHeight: 0.6
             text: sessionData.month_string
             color: "white"
+            style: Text.Outline; styleColor: "black"
         }
     }
     Label {
