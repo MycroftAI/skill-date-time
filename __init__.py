@@ -32,22 +32,8 @@ from mycroft.util.parse import (extract_datetime, fuzzy_match, extract_number,
 from mycroft.util.time import now_utc, to_local, now_local
 from mycroft.skills import resting_screen_handler
 
-
-def speakable_timezone(tz):
-    """Convert timezone to a better speakable version
-
-    Splits joined words,  e.g. EasterIsland  to "Easter Island",
-    "North_Dakota" to "North Dakota" etc.
-    Then parses the output into the correct order for speech,
-    eg. "America/North Dakota/Center" to
-    resulting in something like  "Center North Dakota America", or
-    "Easter Island Chile"
-    """
-    say = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>", tz)
-    say = say.replace("_", " ")
-    say = say.split("/")
-    say.reverse()
-    return " ".join(say)
+from .util.format import speakable_timezone
+from .util.date import get_next_leap_year
 
 
 class TimeSkill(MycroftSkill):
@@ -606,7 +592,7 @@ class TimeSkill(MycroftSkill):
         now = datetime.datetime.now()
         leap_date = datetime.datetime(now.year, 2, 28)
         year = now.year if now <= leap_date else now.year + 1
-        next_leap_year = self.get_next_leap_year(year)
+        next_leap_year = get_next_leap_year(year)
         self.speak_dialog('next.leap.year', {'year': next_leap_year})
 
     def show_date(self, location, day=None):
@@ -634,15 +620,7 @@ class TimeSkill(MycroftSkill):
             day = self.get_local_datetime(location)
         return day.strftime("%Y")
 
-    def get_next_leap_year(self, year):
-        next_year = year + 1
-        if self.is_leap_year(next_year):
-            return next_year
-        else:
-            return self.get_next_leap_year(next_year)
-
-    def is_leap_year(self, year):
-        return (year % 400 == 0) or ((year % 4 == 0) and (year % 100 != 0))
+    
 
     def show_date_gui(self, location, day):
         self.gui.clear()
