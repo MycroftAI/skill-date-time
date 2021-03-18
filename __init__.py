@@ -24,6 +24,7 @@ import geocoder
 
 import mycroft.audio
 from adapt.intent import IntentBuilder
+from lingua_franca.format import date_time_format
 from mycroft.util.format import nice_date, nice_duration, nice_time
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler
@@ -622,12 +623,26 @@ class TimeSkill(MycroftSkill):
     def get_weekday(self, day=None, location=None):
         if not day:
             day = self.get_local_datetime(location)
-        return day.strftime("%A")
+        weekday = nice_date(day)  # forces lingua_franca to initialize
+        if self.lang in date_time_format.lang_config.keys():
+             weekday = list(
+                 date_time_format.lang_config[self.lang]['weekday'].values())[day.weekday()]
+        else:
+            weekday = day.strftime("%A")
+        return weekday
 
     def get_month_date(self, day=None, location=None):
         if not day:
             day = self.get_local_datetime(location)
-        return day.strftime("%B %d")
+        month = nice_date(day)  # forces lingua_franca to initialize
+        if self.lang in date_time_format.lang_config.keys():
+            month = date_time_format.lang_config[self.lang]['month'][str(int(day.strftime("%m")))]
+        else:
+            month = day.strftime("%B")
+        if self.config_core.get('date_format') == 'MDY':
+            return "{} {}".format(month, day.strftime("%d"))
+        else:
+            return "{}. {}".format(day.strftime("%d"), month)
 
     def get_year(self, day=None, location=None):
         if not day:
