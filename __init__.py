@@ -61,12 +61,13 @@ class TimeSkill(MycroftSkill):
         self.default_timezone = None
 
     def initialize(self):
+        date_time_format.cache(self.lang)
+
         # Start a callback that repeats every 10 seconds
         # TODO: Add mechanism to only start timer when UI setting
         #       is checked, but this requires a notifier for settings
         #       updates from the web.
         now = datetime.datetime.now()
-        _ = nice_date(now)  # forces date_time_format/lingua_franca to init
         callback_time = (datetime.datetime(now.year, now.month, now.day,
                                            now.hour, now.minute) +
                          datetime.timedelta(seconds=60))
