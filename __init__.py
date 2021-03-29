@@ -641,6 +641,7 @@ class TimeSkill(MycroftSkill):
             month = localized_month_names[str(int(day.strftime("%m")))]
         else:
             month = day.strftime("%B")
+        month = month.capitalize()
         if self.config_core.get('date_format') == 'MDY':
             return "{} {}".format(month, day.strftime("%d"))
         else:
