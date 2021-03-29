@@ -24,7 +24,8 @@ import geocoder
 
 import mycroft.audio
 from adapt.intent import IntentBuilder
-from mycroft.util.format import nice_date, nice_duration, nice_time
+from mycroft.util.format import (nice_date, nice_duration, nice_time,
+                                 date_time_format)
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler
 from mycroft.util.parse import (extract_datetime, fuzzy_match, extract_number,
@@ -60,6 +61,8 @@ class TimeSkill(MycroftSkill):
         self.default_timezone = None
 
     def initialize(self):
+        date_time_format.cache(self.lang)
+
         # Start a callback that repeats every 10 seconds
         # TODO: Add mechanism to only start timer when UI setting
         #       is checked, but this requires a notifier for settings
@@ -622,12 +625,27 @@ class TimeSkill(MycroftSkill):
     def get_weekday(self, day=None, location=None):
         if not day:
             day = self.get_local_datetime(location)
-        return day.strftime("%A")
+        if self.lang in date_time_format.lang_config.keys():
+            localized_day_names = list(
+                 date_time_format.lang_config[self.lang]['weekday'].values())
+            weekday = localized_day_names[day.weekday()]
+        else:
+            weekday = day.strftime("%A")
+        return weekday.capitalize()
 
     def get_month_date(self, day=None, location=None):
         if not day:
             day = self.get_local_datetime(location)
-        return day.strftime("%B %d")
+        if self.lang in date_time_format.lang_config.keys():
+            localized_month_names = date_time_format.lang_config[self.lang]['month']
+            month = localized_month_names[str(int(day.strftime("%m")))]
+        else:
+            month = day.strftime("%B")
+        month = month.capitalize()
+        if self.config_core.get('date_format') == 'MDY':
+            return "{} {}".format(month, day.strftime("%d"))
+        else:
+            return "{} {}".format(day.strftime("%d"), month)
 
     def get_year(self, day=None, location=None):
         if not day:
