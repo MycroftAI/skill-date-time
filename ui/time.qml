@@ -7,7 +7,7 @@ import Mycroft 1.0 as Mycroft
 
 Mycroft.Delegate {
     id: timeRoot
-    
+    skillBackgroundColorOverlay: Qt.rgba(0, 0, 0, 1)
     leftPadding: 0
     rightPadding: 0
     bottomPadding: 0

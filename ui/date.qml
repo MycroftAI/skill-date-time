@@ -6,6 +6,8 @@ import org.kde.kirigami 2.4 as Kirigami
 import Mycroft 1.0 as Mycroft
 
 Mycroft.Delegate {
+    skillBackgroundColorOverlay: Qt.rgba(0, 0, 0, 1)
+    
     ColumnLayout {
         id: grid
         Layout.fillWidth: true

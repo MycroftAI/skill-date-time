@@ -24,7 +24,8 @@ import geocoder
 
 import mycroft.audio
 from adapt.intent import IntentBuilder
-from mycroft.util.format import nice_date, nice_duration, nice_time
+from mycroft.util.format import (nice_date, nice_duration, nice_time,
+                                 date_time_format)
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_handler
 from mycroft.util.parse import (extract_datetime, fuzzy_match, extract_number,
@@ -60,6 +61,8 @@ class TimeSkill(MycroftSkill):
         self.default_timezone = None
 
     def initialize(self):
+        date_time_format.cache(self.lang)
+
         # Start a callback that repeats every 10 seconds
         # TODO: Add mechanism to only start timer when UI setting
         #       is checked, but this requires a notifier for settings
@@ -113,17 +116,18 @@ class TimeSkill(MycroftSkill):
         return self.config_core.get('time_format') == 'full'
 
     def _get_timezone_from_builtins(self, locale):
-        try:
-            # This handles common city names, like "Dallas" or "Paris"
-            # first get the lat / long.
-            g = geocoder.osm(locale)
-            
-            # now look it up
-            tf = TimezoneFinder()
-            timezone = tf.timezone_at(lng=g.lng, lat=g.lat)
-            return pytz.timezone(timezone)
-        except Exception:
-            pass
+        if "/" not in locale:
+            try:
+                # This handles common city names, like "Dallas" or "Paris"
+                # first get the lat / long.
+                g = geocoder.osm(locale)
+
+                # now look it up
+                tf = TimezoneFinder()
+                timezone = tf.timezone_at(lng=g.lng, lat=g.lat)
+                return pytz.timezone(timezone)
+            except Exception:
+                pass
 
         try:
             # This handles codes like "America/Los_Angeles"
@@ -192,9 +196,9 @@ class TimeSkill(MycroftSkill):
         This uses a variety of approaches to determine the intended timezone.
         If locale is the user defined locale, we save that timezone and cache it.
         """
-        
+
         # default timezone exists, so return it.
-        if self.default_timezone and locale == self.location_timezone:
+        if str(self.default_timezone) == locale == self.location_timezone:
             return self.default_timezone
 
         # no default timezone has either been requested or saved
@@ -345,6 +349,8 @@ class TimeSkill(MycroftSkill):
         self.gui['time_string'] = self.get_display_current_time()
         self.gui['date_string'] = self.get_display_date()
         self.gui['ampm_string'] = ''  # TODO
+        self.gui['weekday_string'] = self.get_weekday()
+        self.gui['month_string'] = self.get_month_date()
 
         if self.settings.get("show_time", False):
             # user requested display of time while idle
@@ -619,12 +625,27 @@ class TimeSkill(MycroftSkill):
     def get_weekday(self, day=None, location=None):
         if not day:
             day = self.get_local_datetime(location)
-        return day.strftime("%A")
+        if self.lang in date_time_format.lang_config.keys():
+            localized_day_names = list(
+                 date_time_format.lang_config[self.lang]['weekday'].values())
+            weekday = localized_day_names[day.weekday()]
+        else:
+            weekday = day.strftime("%A")
+        return weekday.capitalize()
 
     def get_month_date(self, day=None, location=None):
         if not day:
             day = self.get_local_datetime(location)
-        return day.strftime("%B %d")
+        if self.lang in date_time_format.lang_config.keys():
+            localized_month_names = date_time_format.lang_config[self.lang]['month']
+            month = localized_month_names[str(int(day.strftime("%m")))]
+        else:
+            month = day.strftime("%B")
+        month = month.capitalize()
+        if self.config_core.get('date_format') == 'MDY':
+            return "{} {}".format(month, day.strftime("%d"))
+        else:
+            return "{} {}".format(day.strftime("%d"), month)
 
     def get_year(self, day=None, location=None):
         if not day:
