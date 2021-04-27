@@ -1,7 +1,9 @@
 Feature: Date Time Skill Date functionality
 
-  Scenario Outline: what's the date
+  Background: English speaking user
     Given an english speaking user
+
+  Scenario Outline: what's the date
      When the user says "<what's the date>"
      Then "mycroft-date-time" should reply with dialog from "date.dialog"
 
@@ -25,7 +27,6 @@ Feature: Date Time Skill Date functionality
     | what is the day |
 
   Scenario Outline: what is the date a number of days in the future
-    Given an english speaking user
      When the user says "<what's the date in 2 days>"
      Then "mycroft-date-time" should reply with dialog from "date.dialog"
 
@@ -37,7 +38,6 @@ Feature: Date Time Skill Date functionality
     | what is the date 5 days from today |
 
   Scenario Outline: what was the date a number of days in the past
-    Given an english speaking user
      When the user says "<what was the date 2 days ago>"
      Then "mycroft-date-time" should reply with dialog from "date.dialog"
 
@@ -49,7 +49,6 @@ Feature: Date Time Skill Date functionality
     | what was the date 5 days ago |
 
   Scenario Outline: when is a date in the future
-    Given an english speaking user
      When the user says "<what day is future date>"
      Then "mycroft-date-time" should reply with dialog from "date.relative.future.dialog"
 
@@ -66,7 +65,6 @@ Feature: Date Time Skill Date functionality
   @xfail
   # Jira 103 https://mycroft.atlassian.net/browse/MS-103
   Scenario Outline: Failing when is a date in the future
-    Given an english speaking user
      When the user says "<what day is future date>"
      Then "mycroft-date-time" should reply with dialog from "date.relative.future.dialog"
 
@@ -76,7 +74,6 @@ Feature: Date Time Skill Date functionality
     | what day is June 30th |
 
   Scenario Outline: when is a date in the past
-    Given an english speaking user
      When the user says "<what day was it november 1st 1953>"
      Then "mycroft-date-time" should reply with dialog from "date.relative.past.dialog"
 
@@ -90,7 +87,6 @@ Feature: Date Time Skill Date functionality
   @xfail
   # Jira 104 https://mycroft.atlassian.net/browse/MS-105
   Scenario Outline: when is a holiday
-    Given an english speaking user
      When the user says "<when is new year's day>"
      Then "mycroft-date-time" should reply with dialog from "date.dialog"
 
@@ -107,7 +103,6 @@ Feature: Date Time Skill Date functionality
     | when is ramadan 2020 |
 
   Scenario Outline: what is the date next weekend
-    Given an english speaking user
      When the user says "<what is the date next weekend>"
      Then "mycroft-date-time" should reply with dialog from "date.future.weekend.dialog"
 
@@ -118,7 +113,6 @@ Feature: Date Time Skill Date functionality
      | what is the date next weekend |
 
   Scenario Outline: what was the date last weekend
-    Given an english speaking user
      When the user says "<what was the date last weekend>"
      Then "mycroft-date-time" should reply with dialog from "date.last.weekend.dialog"
 
@@ -130,7 +124,6 @@ Feature: Date Time Skill Date functionality
   @xfail
   # Jira 106 https://mycroft.atlassian.net/browse/MS-106
   Scenario Outline: Failing what was the date last weekend
-    Given an english speaking user
      When the user says "<what was the date last weekend>"
      Then "mycroft-date-time" should reply with dialog from "date.last.weekend.dialog"
 
@@ -141,7 +134,6 @@ Feature: Date Time Skill Date functionality
   @xfail
   # Jira 107 https://mycroft.atlassian.net/browse/MS-107
   Scenario Outline: when is the next leap year
-    Given an english speaking user
      When the user says "<when is the next leap year>"
      Then "mycroft-date-time" should reply with dialog from "next.leap.year.dialog"
 
@@ -149,3 +141,16 @@ Feature: Date Time Skill Date functionality
     | when is the next leap year |
     | what year is the next leap year |
     | when is leap year |
+
+  Scenario Outline: Questions that should not trigger this Skill
+     When the user says "<unrelated utterance>"
+     Then "mycroft-date-time" should not reply
+
+  Examples: unrelated utterance
+    | unrelated utterance |
+    | what is the weather on Tuesday |
+    | check tomorrow |
+    | tell me about the weekend |
+    | weather you agree or not |
+    | what is christmas day |
+    | what is ham |
