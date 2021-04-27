@@ -72,6 +72,7 @@ class TimeSkill(MycroftSkill):
                                            now.hour, now.minute) +
                          datetime.timedelta(seconds=60))
         self.schedule_repeating_event(self.update_display, callback_time, 10)
+        self.register_entity_file("RelativeDay.entity")
 
     # TODO:19.08 Moved to MycroftSkill
     @property
@@ -561,20 +562,16 @@ class TimeSkill(MycroftSkill):
     def handle_day_for_date(self, message):
         self.handle_query_date(message, response_type="relative")
 
-    @intent_handler(IntentBuilder("").require("Query").require("RelativeDay")
-                                     .optionally("Date"))
+    @intent_handler(IntentBuilder("").require("Date").require("RelativeDay").optionally("Query"))
     def handle_query_relative_date(self, message):
         if self.voc_match(message.data.get('utterance', ""), 'Today'):
             self.handle_query_date(message, response_type="simple")
         else:
             self.handle_query_date(message, response_type="relative")
 
-    @intent_handler(IntentBuilder("").require("RelativeDay").require("Date"))
-    def handle_query_relative_date_alt(self, message):
-        if self.voc_match(message.data.get('utterance', ""), 'Today'):
-            self.handle_query_date(message, response_type="simple")
-        else:
-            self.handle_query_date(message, response_type="relative")
+    @intent_handler("what.is.the.date.on.intent")
+    def handle_query_relative_date_padatious(self, message):
+        self.handle_query_relative_date(message)
 
     @intent_handler("date.future.weekend.intent")
     def handle_date_future_weekend(self, message):
