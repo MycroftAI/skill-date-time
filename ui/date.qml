@@ -37,12 +37,12 @@ Mycroft.CardDelegate {
 
         /* Add some spacing between the day of week and the calendar graphic */
         Item {
-            height: Mycroft.Units.gridUnit / 2
+            Layout.preferredHeight: Mycroft.Units.gridUnit / 2
         }
         
         /* Calendar graphic */
         Item {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
             Layout.preferredWidth: Mycroft.Units.gridUnit * 25.5
             Layout.preferredHeight: Mycroft.Units.gridUnit * 19.25
             
