@@ -63,7 +63,7 @@ Mycroft.CardDelegate {
                         wrapMode: Text.WordWrap
                         font.family: "Noto Sans Display"
                         font.styleName: "Bold"
-                        text: sessionData.month_string.split(" ")[1]
+                        text: sessionData.day_string
                         color: "#2C3E50"
                     }
                 }
@@ -91,7 +91,7 @@ Mycroft.CardDelegate {
                         wrapMode: Text.WordWrap
                         font.family: "Noto Sans Display"
                         font.styleName: "Bold"
-                        text: sessionData.month_string.split(" ")[0]
+                        text: sessionData.month_string
                         color: "white"
                     }
                 }
