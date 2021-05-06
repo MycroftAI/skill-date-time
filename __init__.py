@@ -666,7 +666,13 @@ class TimeSkill(MycroftSkill):
         self.gui.clear()
         self.gui['date_string'] = self.get_display_date(day, location)
         self.gui['weekday_string'] = self.get_weekday(day, location)
-        self.gui['month_string'] = self.get_month_date(day, location)
+        month_string = self.get_month_date(day, location).split(" ")
+        if self.config_core.get('date_format') == 'MDY':
+            self.gui['day_string'] = month_string[1]
+            self.gui['month_string'] = month_string[0]
+        else:
+            self.gui['day_string'] = month_string[0]
+            self.gui['month_string'] = month_string[1]
         self.gui['year_string'] = self.get_year(day, location)
         self.gui.show_page('date.qml')
 
