@@ -31,7 +31,7 @@ from mycroft import MycroftSkill, intent_handler
 from mycroft.util.parse import (extract_datetime, fuzzy_match, extract_number,
                                 normalize)
 from mycroft.util.time import now_utc, to_local, now_local
-from mycroft.skills import resting_screen_handler
+from mycroft.skills import resting_screen_handler, skill_api_method
 
 
 def speakable_timezone(tz):
@@ -230,7 +230,17 @@ class TimeSkill(MycroftSkill):
 
         return dtUTC.astimezone(tz)
 
+    @skill_api_method
     def get_display_date(self, day=None, location=None):
+        """Get the full date in the configured format.
+
+        Args:
+            day (datetime): optional - datetime object
+            location (str): optional - location to get the current datetime of
+        
+        Returns:
+            Str: The full date in the user configured format - DMY or MDY
+        """
         if not day:
             day = self.get_local_datetime(location)
         if self.config_core.get('date_format') == 'MDY':
@@ -238,8 +248,17 @@ class TimeSkill(MycroftSkill):
         else:
             return day.strftime("%Y/%-d/%-m")
 
+    @skill_api_method
     def get_display_current_time(self, location=None, dtUTC=None):
-        # Get a formatted digital clock time based on the user preferences
+        """Get a formatted digital clock time based on the user preferences
+
+        Args:
+            location (str): optional - location to get the current datetime of
+            dtUTC (datetime): optional - current UTC datetime
+        
+        Returns:
+            Str: The full date in the user configured format - DMY or MDY
+        """
         dt = self.get_local_datetime(location, dtUTC)
         if not dt:
             return None
@@ -622,7 +641,17 @@ class TimeSkill(MycroftSkill):
         self.enclosure.deactivate_mouth_events()
         self.enclosure.mouth_text(show)
 
+    @skill_api_method
     def get_weekday(self, day=None, location=None):
+        """Get the weekday name for a given day.
+        
+        Args:
+            day (datetime): optional - datetime object
+            location (str): optional - location to get the current datetime of
+        
+        Returns:
+            Str: The name of the weekday eg Monday
+        """
         if not day:
             day = self.get_local_datetime(location)
         if self.lang in date_time_format.lang_config.keys():
@@ -633,7 +662,18 @@ class TimeSkill(MycroftSkill):
             weekday = day.strftime("%A")
         return weekday.capitalize()
 
+    @skill_api_method
     def get_month_date(self, day=None, location=None):
+        """Get the date and month for a given day.
+
+        Args:
+            day (datetime): optional - datetime object
+            location (str): optional - location to get the current datetime of
+        
+        Returns:
+            Str: The date in the format DD MONTH or MONTH DD
+                 depending on the users date_format setting.
+        """
         if not day:
             day = self.get_local_datetime(location)
         if self.lang in date_time_format.lang_config.keys():
@@ -647,19 +687,50 @@ class TimeSkill(MycroftSkill):
         else:
             return "{} {}".format(day.strftime("%d"), month)
 
+    @skill_api_method
     def get_year(self, day=None, location=None):
+        """Get the year for a given day in the devices local time.
+        
+        Args:
+            day (datetime): optional - datetime object
+            location (str): optional - location to get the current datetime of
+        
+        Returns:
+            Str: The year in the format YYYY
+        """
         if not day:
             day = self.get_local_datetime(location)
         return day.strftime("%Y")
 
+    @skill_api_method
     def get_next_leap_year(self, year):
+        """Get the next calendar year that will be a leap year.
+
+        Note if the year provided is a leap year, it will not return the same
+        year.
+
+        Args:
+            year (int): Reference year
+
+        Returns:
+            Int: Next leap year following the reference year
+        """
         next_year = year + 1
         if self.is_leap_year(next_year):
             return next_year
         else:
             return self.get_next_leap_year(next_year)
 
+    @skill_api_method
     def is_leap_year(self, year):
+        """Check if given year is a leap year.
+
+        Args:
+            year (int): Year to check
+
+        Returns
+            Bool: True if the year is a leap year
+        """
         return (year % 400 == 0) or ((year % 4 == 0) and (year % 100 != 0))
 
     def show_date_gui(self, location, day):
