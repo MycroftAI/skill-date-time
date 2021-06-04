@@ -99,16 +99,6 @@ Feature: Date Time Skill Time functionality
     | what time will it be in 90 minutes |
     | in 97 minutes what time will it be |
     | what time will it be in 60 seconds |
-
-  @xfail
-  # jira MS-101 https://mycroft.atlassian.net/browse/MS-101
-  Scenario Outline: Failing what's the future time
-    Given an english speaking user
-     When the user says "<what time will it be in 8 hours>"
-     Then "mycroft-date-time" should reply with dialog from "time.future.dialog"
-
-  Examples: what's the future time
-    | what time will it be in 8 hours |
     | what's the time 8 hours from now |
 
   Scenario Outline: what's the future time in a location
@@ -121,16 +111,6 @@ Feature: Date Time Skill Time functionality
      | what time will it be in 8 hours in Berlin |
      | what time will it be 8 hours from now in Paris |
      | what's the time in Los Angeles 8 hours from now |
-
-  @xfail
-  # jira MS-102 https://mycroft.atlassian.net/browse/MS-102
-  Scenario Outline: Failing what's the future time in a location
-    Given an english speaking user
-     When the user says "<what time will it be in the future in a location>"
-     Then "mycroft-date-time" should reply with dialog from "time.future.dialog"
-
-  Examples: what time will it be in the future in a location
-     | what time will it be in the future in a location |
      | give me the time 8 hours from now in Italy |
      | what's the time in France 8 hours |
      | what will be the time in Kansas in 8 hours |
