@@ -1,9 +1,0 @@
-{
-  "utterance": "whats the time",
-  "intent_type": "handle_query_time",
-  "intent": {
-    "Time": "time",
-    "Query": "what"
-  },
-  "expected_dialog": "time.current"
-}
