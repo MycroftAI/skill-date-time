@@ -17,11 +17,12 @@ the [Skill Setting](https://home.mycroft.ai/#/skill).
 * "Tell me the day of the week"
 * "What day is Memorial Day 2020?"
 
-## Credits 
-Mycroft AI (@MycroftAI)
-
 ## Category
 **Daily**
+
+## Credits 
+[Mycroft AI](https://github.com/MycroftAI)
+[NeonDaniel](https://github.com/NeonDaniel)
 
 ## Tags
 #date
