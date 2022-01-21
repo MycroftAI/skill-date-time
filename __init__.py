@@ -67,7 +67,7 @@ class TimeSkill(NeonSkill):
     def initialize(self):
         pass
 
-    def use_24hour(self, message) -> bool:
+    def use_24hour(self, message=None) -> bool:
         return self.preference_unit(message)['time'] == 24
 
     def get_timezone(self, locale):
@@ -160,12 +160,16 @@ class TimeSkill(NeonSkill):
         Returns:
             Str: The full date in the user configured format - DMY or MDY
         """
-        dt = self.get_local_datetime(location, dtUTC)
-        if not dt:
-            return None
+        try:
+            dt = self.get_local_datetime(location, dtUTC)
+            if not dt:
+                return None
 
-        return nice_time(dt, self.lang, speech=False, use_24hour=self.use_24hour,
-                         use_ampm=self.preference_skill()['use_ampm'])
+            return nice_time(dt, self.lang, speech=False, use_24hour=self.use_24hour(),
+                             use_ampm=self.preference_skill()['use_ampm'])
+        except Exception as e:
+            LOG.error(e)
+            return None
 
     @skill_api_method
     def get_weekday(self, day=None, location=None):
