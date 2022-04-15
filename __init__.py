@@ -47,6 +47,7 @@ import pytz
 from datetime import tzinfo, datetime
 from typing import Union, Optional
 
+from lingua_franca import load_language
 from timezonefinder import TimezoneFinder
 from mycroft_bus_client import Message
 from ovos_utils.parse import fuzzy_match
@@ -119,6 +120,8 @@ class TimeSkill(NeonSkill):
             return day.strftime("%-m/%-d/%Y")
         elif unit_prefs.get('date') == 'YMD':
             return day.strftime("%Y/%-m/%-d")
+        elif unit_prefs.get('date') == "DMY":
+            return day.strftime("%-d/%-m/%Y")
         else:
             return day.strftime("%Y/%-d/%-m")
 
@@ -129,16 +132,22 @@ class TimeSkill(NeonSkill):
         """
         Get a formatted digital clock time based on the user preferences
         :param location: location to get the current datetime of
-        :param dt_utc:  current UTC datetime
+        :param dt_utc: UTC datetime to override current datetime
         :param: Time in the user configured format if location is valid
             else None
         :returns: Formatted string time or None if Exception
         """
         try:
-            dt = self.get_local_datetime(location, dt_utc)
+            dt = self.get_local_datetime(location)
+            if dt_utc:
+                if location:
+                    dt = dt_utc.astimezone(dt.tzinfo)
+                else:
+                    dt = dt_utc
             if not dt:
                 return None
-
+            load_language(self.lang)
+            # noinspection PyTypeChecker
             return nice_time(dt, self.lang, speech=False,
                              use_24hour=self.use_24hour,
                              use_ampm=self.preference_skill()['use_ampm'])
@@ -183,10 +192,10 @@ class TimeSkill(NeonSkill):
         else:
             month = day.strftime("%B")
         month = month.capitalize()
-        if self.preference_unit().get('date') == 'MDY':
-            return "{} {}".format(month, day.strftime("%d"))
-        else:
-            return "{} {}".format(day.strftime("%d"), month)
+        if "MD" in self.preference_unit().get('date'):  # YMD, MDY
+            return f"{month} {day.strftime('%d')}"
+        else:  # DMY
+            return f"{day.strftime('%d')} {month}"
 
     @skill_api_method
     def get_year(self, day: Optional[datetime] = None,
@@ -198,7 +207,7 @@ class TimeSkill(NeonSkill):
         :returns: year in the format YYYY
         """
         if not day:
-            day = self.get_local_datetime(location, None)
+            day = self.get_local_datetime(location)
         return day.strftime("%Y")
 
     @skill_api_method
@@ -316,7 +325,8 @@ class TimeSkill(NeonSkill):
         """
         message = message or dig_for_message()
         location = location or \
-            self._extract_location(message.data.get("utterance"))
+            (self._extract_location(message.data.get("utterance")) if message
+             else None)
 
         if location:  # Lookup the tz for the requested location
             # Filter out invalid characters from location names
@@ -358,6 +368,7 @@ class TimeSkill(NeonSkill):
         use_ampm = self.preference_skill(message)['use_ampm']
         if location:
             use_ampm = True
+        load_language(self.lang)
         return nice_time(dt, self.lang, speech=True,
                          use_24hour=self.use_24hour, use_ampm=use_ampm)
 
@@ -412,7 +423,7 @@ class TimeSkill(NeonSkill):
         :return: extracted location string if found in utterance
         """
         rx_file = self.find_resource('location.rx', 'regex')
-        if rx_file:
+        if rx_file and utt:
             with open(rx_file) as f:
                 for pat in f.read().splitlines():
                     pat = pat.strip()
