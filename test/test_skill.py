@@ -283,7 +283,7 @@ class TestSkill(unittest.TestCase):
             {"city": "seattle"},
             {"city": "seattle", "state": "washington"},
             {"city": "seattle", "country": "united states"},
-            "pacific time",
+            # "pacific time",
             "los angeles time"
         ]
         valid_tz = timezone("America/Los_Angeles")
