@@ -1,0 +1,33 @@
+# This workflow will run unit tests
+
+name: Update skill.json
+on:
+  push:
+
+jobs:
+  update_skill_json:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          path: action/skill/
+      - name: Set up python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y gcc git libpulse-dev
+          pip install --upgrade pip
+          pip install neon-utils\~=0.17 ovos-skills-manager
+      - name: Get Updated skill.json
+        run: |
+          python action/skill/scripts/update_skill_json.py
+      - name: Push skill.json Change
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Update skill.json
+          repository: action/skill/
