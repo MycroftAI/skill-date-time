@@ -54,7 +54,8 @@ from ovos_utils.parse import fuzzy_match
 from neon_utils.location_utils import get_coordinates, get_timezone
 from adapt.intent import IntentBuilder
 from neon_utils.skills.neon_skill import NeonSkill, LOG
-from neon_utils.message_utils import dig_for_message
+from neon_utils.message_utils import resolve_message
+from neon_utils.user_utils import get_user_prefs
 
 from mycroft.skills.core import intent_handler, resting_screen_handler,\
     skill_api_method
@@ -85,8 +86,7 @@ class TimeSkill(NeonSkill):
 
     @property
     def use_24hour(self) -> bool:
-        message = dig_for_message()
-        return self.preference_unit(message)['time'] == 24
+        return get_user_prefs()["units"]["time"] == 24
 
     @resting_screen_handler('Time and Date')
     def handle_idle(self, _):
@@ -105,15 +105,18 @@ class TimeSkill(NeonSkill):
         self.gui.show_page('idle.qml')
 
     @skill_api_method
+    @resolve_message
     def get_display_date(self, day: Optional[datetime] = None,
-                         location: Optional[str] = None) -> str:
+                         location: Optional[str] = None,
+                         message: Message = None) -> str:
         """
         Get the full date for day or location in the configured format.
         :param day: datetime object to display
         :param location: location to get the current datetime of
+        :param message: Message containing user profile for request
         :returns: The full date in the user configured format
         """
-        unit_prefs = self.preference_unit(dig_for_message())
+        unit_prefs = get_user_prefs(message)['units']
         if not day:
             day = self.get_local_datetime(location, None)
         if unit_prefs.get('date') == 'MDY':
@@ -126,8 +129,10 @@ class TimeSkill(NeonSkill):
             return day.strftime("%Y/%-d/%-m")
 
     @skill_api_method
+    @resolve_message
     def get_display_current_time(self, location: Optional[str] = None,
-                                 dt_utc: Optional[datetime] = None) -> \
+                                 dt_utc: Optional[datetime] = None,
+                                 message: Message = None) -> \
             Optional[str]:
         """
         Get a formatted digital clock time based on the user preferences
@@ -135,10 +140,11 @@ class TimeSkill(NeonSkill):
         :param dt_utc: UTC datetime to override current datetime
         :param: Time in the user configured format if location is valid
             else None
+        :param message: Message containing user profile for request
         :returns: Formatted string time or None if Exception
         """
         try:
-            dt = self.get_local_datetime(location)
+            dt = self.get_local_datetime(location, message)
             if dt_utc:
                 if location:
                     dt = dt_utc.astimezone(dt.tzinfo)
@@ -314,6 +320,7 @@ class TimeSkill(NeonSkill):
                 break
         return tz
 
+    @resolve_message
     def get_local_datetime(self, location: Optional[str] = None,
                            message: Optional[Message] = None) -> \
             Optional[datetime]:
@@ -323,7 +330,6 @@ class TimeSkill(NeonSkill):
         :param message: Message associated with the request
         :returns: current datetime object or None if tz not found
         """
-        message = message or dig_for_message()
         location = location or \
             (self._extract_location(message.data.get("utterance")) if message
              else None)
@@ -333,17 +339,20 @@ class TimeSkill(NeonSkill):
             location = re.sub('[?!./_-]', ' ', location)
             tz = self.get_timezone(location)
         else:  # Get the local tz
-            pref_location = self.preference_location(message)
-            location = f'{pref_location["city"]}, {pref_location["state"]}'
+            location = self.location
+            city = location['city']['name']
+            state = location['city']['state']['name']
+            country = location['city']['state']['country']['name']
+            location = f'{city}, {state}'
             try:
-                tz = pytz.timezone(pref_location['tz'])
+                tz = pytz.timezone(self.location_timezone)
             except pytz.UnknownTimeZoneError:
                 tz = None
             if not tz:  # Config tz invalid, try location lookup
                 LOG.warning("configured timezone invalid or undefined")
-                tz = self.get_timezone({"city": pref_location["city"],
-                                        "state": pref_location["state"],
-                                        "country": pref_location["country"]})
+                tz = self.get_timezone({"city": city,
+                                        "state": state,
+                                        "country": country})
         if not tz:
             if location and isinstance(location, str):
                 self.speak_dialog("time.tz.not.found", {"location": location})
@@ -393,7 +402,7 @@ class TimeSkill(NeonSkill):
             location = location.title()
         else:
             location = ""
-        if not self.preference_skill(dig_for_message())['use_ampm']:
+        if not self.preference_skill()['use_ampm']:
             ampm = ""
         self.gui["location"] = location
         self.gui['hours'] = hours
@@ -432,7 +441,9 @@ class TimeSkill(NeonSkill):
                     res = re.search(pat, utt)
                     if res:
                         try:
-                            return res.group("Location")
+                            to_return = res.group("Location")
+                            LOG.warning("Location extracted in patch method")
+                            return to_return
                         except IndexError:
                             pass
         return None

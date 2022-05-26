@@ -98,33 +98,39 @@ class TestSkill(unittest.TestCase):
         self.skill.gui = real_gui
 
     def test_get_display_date(self):
-        date_fmt = "MDY"
-
-        def pref_unit(*_, **__):
-            return {"date": date_fmt}
-
-        real_pref_unit = self.skill.preference_unit
-        self.skill.preference_unit = pref_unit
+        from neon_utils.user_utils import get_default_user_config
+        config = get_default_user_config()
+        config['user']['username'] = 'test_user'
+        config['units']['date'] = "MDY"
+        test_message = Message("test", {}, {"username": "test_user",
+                                            "user_profiles": [config]})
 
         test_date = dt.datetime(month=1, day=2, year=2000)
 
-        date_str = self.skill.get_display_date(test_date)
+        date_str = self.skill.get_display_date(test_date, message=test_message)
         self.assertEqual(date_str, "1/2/2000")
 
-        date_fmt = "DMY"
-        date_str = self.skill.get_display_date(test_date)
+        config['units']['date'] = "DMY"
+        test_message = Message("test", {}, {"username": "test_user",
+                                            "user_profiles": [config]})
+        date_str = self.skill.get_display_date(test_date, message=test_message)
         self.assertEqual(date_str, "2/1/2000")
 
-        date_fmt = "YMD"
-        date_str = self.skill.get_display_date(test_date)
+        config['units']['date'] = "YMD"
+        test_message = Message("test", {}, {"username": "test_user",
+                                            "user_profiles": [config]})
+        date_str = self.skill.get_display_date(test_date, message=test_message)
         self.assertEqual(date_str, "2000/1/2")
 
         now_date_str = self.skill.get_display_date()
         self.assertNotEqual(date_str, now_date_str)
 
-        self.skill.preference_unit = real_pref_unit
-
     def test_get_display_current_time(self):
+        from neon_utils.user_utils import get_default_user_config
+        config = get_default_user_config()
+        config['user']['username'] = 'test_user'
+
+
         current_time = self.skill.get_display_current_time()
         self.assertIsInstance(current_time, str)
         self.assertEqual(len(current_time.split(':')), 2)
@@ -134,34 +140,36 @@ class TestSkill(unittest.TestCase):
         self.assertEqual(len(current_time.split(':')), 2)
         self.assertNotEqual(current_time, current_time_honolulu)
 
-        time_format = 24
-
-        def pref_unit(*_, **__):
-            return {'time': time_format}
-
-        real_pref_unit = self.skill.preference_unit
-        self.skill.preference_unit = pref_unit
+        config['units']['time'] = 24
+        test_message = Message("test", {}, {"username": "test_user",
+                                            "user_profiles": [config]})
 
         dt_utc = dt.datetime.now(dt.timezone.utc).replace(hour=23, minute=30)
-        utc_time = self.skill.get_display_current_time(dt_utc=dt_utc)
+        utc_time = self.skill.get_display_current_time(dt_utc=dt_utc,
+                                                       message=test_message)
         self.assertEqual(utc_time, "23:30")
-        az_time = self.skill.get_display_current_time("phoenix", dt_utc)
+        az_time = self.skill.get_display_current_time("phoenix", dt_utc,
+                                                      message=test_message)
         self.assertEqual(az_time, "16:30")
 
         self.skill.settings['use_ampm'] = True
-        time_format = 12
-        utc_time = self.skill.get_display_current_time(dt_utc=dt_utc)
+        config['units']['time'] = 12
+        test_message = Message("test", {}, {"username": "test_user",
+                                            "user_profiles": [config]})
+        utc_time = self.skill.get_display_current_time(dt_utc=dt_utc,
+                                                       message=test_message)
         self.assertEqual(utc_time, "11:30 PM")
-        az_time = self.skill.get_display_current_time("phoenix", dt_utc)
+        az_time = self.skill.get_display_current_time("phoenix", dt_utc,
+                                                      message=test_message)
         self.assertEqual(az_time, "4:30 PM")
 
         self.skill.settings['use_ampm'] = False
-        utc_time = self.skill.get_display_current_time(dt_utc=dt_utc)
+        utc_time = self.skill.get_display_current_time(dt_utc=dt_utc,
+                                                       message=test_message)
         self.assertEqual(utc_time, "11:30")
-        az_time = self.skill.get_display_current_time("phoenix", dt_utc)
+        az_time = self.skill.get_display_current_time("phoenix", dt_utc,
+                                                      message=test_message)
         self.assertEqual(az_time, "4:30")
-
-        self.skill.preference_unit = real_pref_unit
 
     def test_get_weekday(self):
         self.assertIsInstance(self.skill.get_weekday(), str)
