@@ -184,31 +184,31 @@ class TestSkill(unittest.TestCase):
         self.assertEqual(self.skill.get_weekday(known_day), "Saturday")
 
     def test_get_month_date(self):
-        date_fmt = "MDY"
-
-        def pref_unit(*_, **__):
-            return {"date": date_fmt}
-
-        real_pref_unit = self.skill.preference_unit
-        self.skill.preference_unit = pref_unit
-
+        from neon_utils.user_utils import get_default_user_config
+        config = get_default_user_config()
+        config['user']['username'] = 'test_user'
         test_date = dt.datetime(month=1, day=1, year=2000)
 
-        date_str = self.skill.get_month_date(test_date)
+        config['units']['date'] = "MDY"
+        test_message = Message("test", {}, {"username": "test_user",
+                                            "user_profiles": [config]})
+        date_str = self.skill.get_month_date(test_date, message=test_message)
         self.assertEqual(date_str, "January 01")
 
-        date_fmt = "DMY"
-        date_str = self.skill.get_month_date(test_date)
+        config['units']['date'] = "DMY"
+        test_message = Message("test", {}, {"username": "test_user",
+                                            "user_profiles": [config]})
+        date_str = self.skill.get_month_date(test_date, message=test_message)
         self.assertEqual(date_str, "01 January")
 
-        date_fmt = "YMD"
-        date_str = self.skill.get_month_date(test_date)
+        config['units']['date'] = "YMD"
+        test_message = Message("test", {}, {"username": "test_user",
+                                            "user_profiles": [config]})
+        date_str = self.skill.get_month_date(test_date, message=test_message)
         self.assertEqual(date_str, "January 01")
 
         now_date_str = self.skill.get_month_date()
         self.assertNotEqual(date_str, now_date_str)
-
-        self.skill.preference_unit = real_pref_unit
 
     def test_get_year(self):
         self.assertIsInstance(self.skill.get_year(), str)

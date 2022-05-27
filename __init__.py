@@ -54,7 +54,7 @@ from ovos_utils.parse import fuzzy_match
 from neon_utils.location_utils import get_coordinates, get_timezone
 from adapt.intent import IntentBuilder
 from neon_utils.skills.neon_skill import NeonSkill, LOG
-from neon_utils.message_utils import resolve_message
+from neon_utils.message_utils import dig_for_message
 from neon_utils.user_utils import get_user_prefs
 
 from mycroft.skills.core import intent_handler, resting_screen_handler,\
@@ -105,7 +105,6 @@ class TimeSkill(NeonSkill):
         self.gui.show_page('idle.qml')
 
     @skill_api_method
-    @resolve_message
     def get_display_date(self, day: Optional[datetime] = None,
                          location: Optional[str] = None,
                          message: Message = None) -> str:
@@ -116,6 +115,7 @@ class TimeSkill(NeonSkill):
         :param message: Message containing user profile for request
         :returns: The full date in the user configured format
         """
+        message = message or dig_for_message()
         unit_prefs = get_user_prefs(message)['units']
         if not day:
             day = self.get_local_datetime(location, None)
@@ -129,7 +129,6 @@ class TimeSkill(NeonSkill):
             return day.strftime("%Y/%-d/%-m")
 
     @skill_api_method
-    @resolve_message
     def get_display_current_time(self, location: Optional[str] = None,
                                  dt_utc: Optional[datetime] = None,
                                  message: Message = None) -> \
@@ -143,6 +142,7 @@ class TimeSkill(NeonSkill):
         :param message: Message containing user profile for request
         :returns: Formatted string time or None if Exception
         """
+        message = message or dig_for_message()
         try:
             dt = self.get_local_datetime(location, message)
             if dt_utc:
@@ -182,14 +182,18 @@ class TimeSkill(NeonSkill):
 
     @skill_api_method
     def get_month_date(self, day: Optional[datetime] = None,
-                       location: Optional[str] = None) -> str:
+                       location: Optional[str] = None,
+                       message: Message = None) -> str:
         """
         Get the month and date for a given day and location
         :param day: optional datetime object to get month and date for
         :param location: optional location to get the current datetime of
+        :param message: Message containing user profile for request
         :returns: date in the format DD MONTH or MONTH DD
             depending on the users date_format setting.
         """
+        message = message or dig_for_message()
+        unit_prefs = get_user_prefs(message)["units"]
         if not day:
             day = self.get_local_datetime(location, None)
         if self.lang in date_time_format.lang_config.keys():
@@ -198,7 +202,7 @@ class TimeSkill(NeonSkill):
         else:
             month = day.strftime("%B")
         month = month.capitalize()
-        if "MD" in self.preference_unit().get('date'):  # YMD, MDY
+        if "MD" in unit_prefs.get('date'):  # YMD, MDY
             return f"{month} {day.strftime('%d')}"
         else:  # DMY
             return f"{day.strftime('%d')} {month}"
@@ -320,7 +324,8 @@ class TimeSkill(NeonSkill):
                 break
         return tz
 
-    @resolve_message
+    # TODO: Homescreen creates excessive logs and won't resolve a message
+    # @resolve_message
     def get_local_datetime(self, location: Optional[str] = None,
                            message: Optional[Message] = None) -> \
             Optional[datetime]:
