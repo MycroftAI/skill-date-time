@@ -48,13 +48,14 @@ from datetime import tzinfo, datetime
 from typing import Union, Optional
 
 from lingua_franca import load_language
+from mycroft import intent_file_handler
 from timezonefinder import TimezoneFinder
 from mycroft_bus_client import Message
 from ovos_utils.parse import fuzzy_match
 from neon_utils.location_utils import get_coordinates, get_timezone
 from adapt.intent import IntentBuilder
 from neon_utils.skills.neon_skill import NeonSkill, LOG
-from neon_utils.message_utils import dig_for_message
+from neon_utils.message_utils import dig_for_message, request_for_neon
 from neon_utils.user_utils import get_user_prefs
 
 from mycroft.skills.core import intent_handler, resting_screen_handler,\
@@ -247,11 +248,14 @@ class TimeSkill(NeonSkill):
     @intent_handler(IntentBuilder("QueryTime")
                     .require("Query").require("Time")
                     .optionally("Location"))
+    @intent_file_handler("what.time.is.it.intent")
     def handle_query_time(self, message: Message):
         """
         Handle a user request for the time
         :param message: Message associated with the request
         """
+        if not request_for_neon(message):
+            return
         location = message.data.get("Location")
         LOG.info(f"requested location: {location}")
         current_time = self.get_spoken_time(location, message)
@@ -270,14 +274,6 @@ class TimeSkill(NeonSkill):
         else:
             self.speak_dialog("time.current", {"time": current_time})
 
-    @intent_handler("what.time.is.it.intent")
-    def handle_current_time_simple(self, message):
-        """
-        Handle a user request for the time
-        :param message: Message associated with the request
-        """
-        self.handle_query_time(message)
-
     @intent_handler(IntentBuilder("QueryDate")
                     .require("Query").require("Date")
                     .optionally("Location"))
@@ -286,6 +282,8 @@ class TimeSkill(NeonSkill):
         Handle a user request for the date
         :param message: Message associated with the request
         """
+        if not request_for_neon(message):
+            return
         requested_date = self.get_local_datetime(message.data.get("Location"),
                                                  message)
         if not requested_date:
@@ -294,11 +292,6 @@ class TimeSkill(NeonSkill):
         self.show_date_gui(requested_date)
         speak = requested_date.strftime("%A, %B %-d, %Y")
         self.speak_dialog("date", {"date": speak})
-
-    @intent_handler(IntentBuilder("").require("Query").require("Date").
-                    optionally("Location"))
-    def handle_query_date_simple(self, message):
-        self.handle_query_date(message)
 
     def get_timezone(self, locale: Union[str, dict]) \
             -> Optional[tzinfo]:
