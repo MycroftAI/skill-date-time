@@ -1,0 +1,51 @@
+# This workflow will run unit tests
+
+name: Test Skill
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  neon_core:
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y gcc libfann-dev swig libssl-dev portaudio19-dev git libpulse-dev
+          pip install --upgrade pip
+          pip install pytest mock git+https://github.com/NeonGeckoCom/NeonCore#egg=neon_core
+          pip install -r requirements.txt
+      - name: Test Skill
+        run: |
+          pytest test/test_skill.py
+  ovos-core:
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Dependencies
+        run: |
+          sudo apt install -y gcc libfann-dev swig libssl-dev portaudio19-dev git
+          pip install --upgrade pip
+          pip install ovos-core[skills] pytest mock
+          pip install -r requirements.txt
+      - name: Test Skill
+        run: |
+          pytest test/test_skill.py

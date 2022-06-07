@@ -7,7 +7,13 @@
                     {
                         "name": "show_time",
                         "type": "checkbox",
-                        "label": "Show digital clock when idle",
+                        "label": "Show clock when idle",
+                        "value": "false"
+                    },
+                    {
+                        "name": "use_ampm",
+                        "type": "checkbox",
+                        "label": "Display and speak am/pm for time requests (only applies to 12 hour time)",
                         "value": "false"
                     }
                 ]
