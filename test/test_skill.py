@@ -24,7 +24,7 @@ import datetime as dt
 
 from os import mkdir
 from os.path import dirname, join, exists
-
+from pytz import timezone
 from mock import Mock
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
@@ -262,23 +262,26 @@ class TestSkill(unittest.TestCase):
         self.assertEqual(set(call_args[1].keys()), {"date"})
 
     def test_get_timezone(self):
-        from pytz import timezone
-
-        test_cases = [
-            "seattle",
-            "seattle washington",
-            "seattle, wa",
+        la_timezone = timezone("America/Los_Angeles")
+        dict_test_cases = [
             {"city": "seattle"},
             {"city": "seattle", "state": "washington"},
             {"city": "seattle", "country": "united states"},
             # "pacific time",
             "los angeles time"
         ]
-        valid_tz = timezone("America/Los_Angeles")
-        for case in test_cases:
+        for case in dict_test_cases:
             tz = self.skill.get_timezone(case)
             self.assertIsInstance(tz, dt.tzinfo)
-            self.assertEqual(tz, valid_tz)
+            self.assertEqual(tz, la_timezone)
+        str_test_cases = {
+            "seattle": la_timezone,
+            "seattle washington": la_timezone,
+            "seattle, wa": la_timezone,
+            "paris texas": timezone("America/Chicago")
+        }
+        for case in str_test_cases:
+            self.assertEqual(self.skill.get_timezone(case), str_test_cases[case])
 
     def test_get_local_datetime(self):
         # TODO
@@ -301,20 +304,26 @@ class TestSkill(unittest.TestCase):
         pass
 
     def test_get_timezone_from_neon_utils(self):
-        # TODO
-        pass
+        self.assertEqual(self.skill._get_timezone_from_neon_utils("seattle"),
+                         timezone("America/Los_Angeles"))
 
     def test_get_timezone_from_builtins(self):
-        # TODO
-        pass
+        self.assertEqual(self.skill._get_timezone_from_builtins("seattle"),
+                         timezone("America/Los_Angeles"))
 
     def test_get_timezone_from_table(self):
-        # TODO
-        pass
+        self.assertEqual(self.skill._get_timezone_from_table("pacific time"),
+                         timezone("America/Los_Angeles"))
+        self.assertEqual(self.skill._get_timezone_from_table("eastern time"),
+                         timezone("America/New_York"))
+        self.assertEqual(self.skill._get_timezone_from_table("china"),
+                         timezone("Asia/Hong_Kong"))
+        self.assertEqual(self.skill._get_timezone_from_table("paris texas"),
+                         timezone("America/Chicago"))
 
     def test_get_timezone_from_fuzzymatch(self):
-        # TODO
-        pass
+        self.assertEqual(self.skill._get_timezone_from_fuzzymatch("los angeles"),
+                         timezone("America/Los_Angeles"))
 
 
 if __name__ == '__main__':

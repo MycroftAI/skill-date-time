@@ -304,9 +304,10 @@ class TimeSkill(NeonSkill):
         """
         LOG.info(f"Getting tz for locale: {locale}")
         str_locale = locale if isinstance(locale, str) else locale.get("city")
-        for method in (self._get_timezone_from_neon_utils,
+        # Start with known overrides, then go through available utilities
+        for method in (self._get_timezone_from_table,
+                       self._get_timezone_from_neon_utils,
                        self._get_timezone_from_builtins,
-                       self._get_timezone_from_table,
                        self._get_timezone_from_fuzzymatch):
             try:
                 if method == self._get_timezone_from_neon_utils:
