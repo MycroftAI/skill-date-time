@@ -68,7 +68,7 @@ def find_resource_files():
                     package_data.append(
                         path.join(directory.replace(base_dir, "").lstrip('/'),
                                   '*'))
-    print(package_data)
+#    print(package_data)
     return package_data
 
 
