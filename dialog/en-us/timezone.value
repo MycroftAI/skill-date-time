@@ -1,11 +1,12 @@
 # This is a translatable list of values and timezones
-China, Etc/GMT+8
+China, Asia/Hong_Kong
 Kansas City, US/Central
 Central time zone, US/Central
 Central time, US/Central
-Pacific time, US/Pacific-New
-Pacific time zone, US/Pacific-New
-Eastern time, US/Eastern
-Eastern time zone, US/Eastern
-East coast, US/Eastern
-East coast time zone, US/Eastern
+Pacific time, America/Los_Angeles
+Pacific time zone, America/Los_Angeles
+Eastern time, America/New_York
+Eastern time zone, America/New_York
+East coast, America/New_York
+East coast time zone, America/New_York
+Paris Texas, America/Chicago

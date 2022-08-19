@@ -157,7 +157,8 @@ class TimeSkill(NeonSkill):
             # noinspection PyTypeChecker
             return nice_time(dt, self.lang, speech=False,
                              use_24hour=self.use_24hour,
-                             use_ampm=self.preference_skill()['use_ampm'])
+                             use_ampm=self.preference_skill().get('use_ampm',
+                                                                  False))
         except Exception as e:
             LOG.error(e)
             return None
@@ -198,7 +199,8 @@ class TimeSkill(NeonSkill):
         if not day:
             day = self.get_local_datetime(location, None)
         if self.lang in date_time_format.lang_config.keys():
-            localized_month_names = date_time_format.lang_config[self.lang]['month']
+            localized_month_names = \
+                date_time_format.lang_config[self.lang]['month']
             month = localized_month_names[str(int(day.strftime("%m")))]
         else:
             month = day.strftime("%B")
@@ -302,9 +304,10 @@ class TimeSkill(NeonSkill):
         """
         LOG.info(f"Getting tz for locale: {locale}")
         str_locale = locale if isinstance(locale, str) else locale.get("city")
-        for method in (self._get_timezone_from_neon_utils,
+        # Start with known overrides, then go through available utilities
+        for method in (self._get_timezone_from_table,
+                       self._get_timezone_from_neon_utils,
                        self._get_timezone_from_builtins,
-                       self._get_timezone_from_table,
                        self._get_timezone_from_fuzzymatch):
             try:
                 if method == self._get_timezone_from_neon_utils:
@@ -372,7 +375,7 @@ class TimeSkill(NeonSkill):
         dt = self.get_local_datetime(location, message)
         if not dt:
             return
-        use_ampm = self.preference_skill(message)['use_ampm']
+        use_ampm = self.preference_skill(message).get('use_ampm', False)
         if location:
             use_ampm = True
         load_language(self.lang)
@@ -400,7 +403,7 @@ class TimeSkill(NeonSkill):
             location = location.title()
         else:
             location = ""
-        if not self.preference_skill()['use_ampm']:
+        if not self.preference_skill().get('use_ampm', False):
             ampm = ""
         self.gui["location"] = location
         self.gui['hours'] = hours
