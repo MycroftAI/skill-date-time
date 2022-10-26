@@ -1,0 +1,10 @@
+(řekni mi|dej mi|) jaký čas bude (za|) {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu)) (od teď|)
+(řekni mi|dej mi|) jaký čas bude (za|) {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu)) (od teď|) v {location}
+(řekni mi|dej mi|) (jaký je|jaký bude|) čas za {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu)) (od teď|)
+(řekni mi|dej mi|) (jaký je|jaký bude|) čas za {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu)) (od teď|) v {location}
+kdy (je|bude) {offset} {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu)) (od teď|)
+kdy (je|bude) {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu)) (od teď|) v {location}
+(za|) {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu)) (od teď|) ((jaký je to|jaký bude) čas)
+(za|) {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu)) (od teď|) ((jaký je to|jaký bude) čas) v {location}
+(jaký čas|kolik hodin) (bude|) v {location} (za|) {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu)) (od teď|)
+v {location} (jaký čas|kolik hodin) (bude|) (za|) {offset} ((hodin|hodiny|hodinu)|(minut|minuty|minutu)|(sekund|sekundy|sekundu))
