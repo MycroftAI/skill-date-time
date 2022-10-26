@@ -22,7 +22,7 @@ jobs:
           sudo apt update
           sudo apt install -y gcc git libpulse-dev
           pip install --upgrade pip
-          pip install neon-utils\~=0.17 ovos-skills-manager
+          pip install neon-utils~=1.1,\>=1.1.1 ovos-skills-manager
       - name: Get Updated skill.json
         run: |
           python action/skill/scripts/update_skill_json.py
