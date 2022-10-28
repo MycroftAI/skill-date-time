@@ -1,0 +1,3 @@
+{{date}}, {{num_days}} dní od teď
+Je to {{date}}, za {{num_days}} dní
+{{date}}, za {{num_days}}
